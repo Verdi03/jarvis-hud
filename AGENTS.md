@@ -1,23 +1,47 @@
 # Base44 Dev Environment
 
 ## Project Overview
-JARVIS HUD — a single-file static voice interface demo (`index.html`). No backend, no build step, no dependencies, no secrets. All logic (speech recognition, synthesis, animations) runs client-side in the browser.
+JARVIS HUD — voice interface for the Base44 Superagent. The frontend (`index.html`) captures speech via Web Speech API (STT), sends text to a Python FastAPI backend, which forwards it to the Base44 Superagent. Responses are synthesized via Kokoro TTS (local Docker) and played back as audio.
 
-## How It Runs
-- Served by `nginx:alpine` via `docker-compose.base44.yml`, bind-mounting the repo at `/usr/share/nginx/html`.
-- A custom `nginx.dev.conf` runs the nginx worker as `root` to work around the sandbox's restrictive directory permissions (700).
-- Host port 3000 maps to nginx port 80.
-- Edits to `index.html` are reflected immediately (file is bind-mounted, not baked into the image).
+## Architecture
+- **Frontend** (`index.html`): static HUD interface, speech recognition (browser STT), audio playback. Calls `/api/chat` and `/api/tts`.
+- **Backend** (`backend/`): Python FastAPI serving both API and static frontend on port 3000.
+  - `/api/chat` → forwards to Base44 Superagent
+  - `/api/tts` → proxies to Kokoro-FastAPI container
+  - `/api/gmail/messages` → lists recent Gmail messages (read-only)
+  - `/api/gmail/draft` → creates a draft email (NEVER sends — user validation required)
+  - `/api/n8n/trigger` → triggers n8n Cloud webhook
+  - `/api/health` → reports which services are configured
+- **Kokoro** (`kokoro` service): Kokoro-FastAPI CPU image, OpenAI-compatible TTS API on port 8880 (internal).
 
 ## Start Command
 ```
-docker compose -f docker-compose.base44.yml up -d
+docker compose -f docker-compose.base44.yml up -d --build
 ```
 
+## Secrets (all optional — app boots without them)
+| Variable | Purpose |
+|---|---|
+| `BASE44_SUPERAGENT_URL` | Superagent API endpoint |
+| `BASE44_SUPERAGENT_TOKEN` | Superagent auth token |
+| `GOOGLE_CLIENT_ID` | Gmail API OAuth client ID |
+| `GOOGLE_CLIENT_SECRET` | Gmail API OAuth client secret |
+| `GOOGLE_REFRESH_TOKEN` | Gmail API offline refresh token |
+| `N8N_WEBHOOK_URL` | n8n Cloud webhook URL for automations |
+
+Without secrets, the app starts in "EN ATTENTE" mode. Chat returns a "not configured" message; TTS works (Kokoro is local); Gmail and n8n return 503.
+
+## Safety Rules
+- Gmail integration only reads messages and creates drafts. It NEVER sends, deletes, or modifies emails without explicit user validation.
+- No local LLM — the Superagent Base44 is the sole brain.
+- No additional paid services — n8n Cloud is already subscribed.
+
 ## Health Check
-- `GET /` returns 200 with the JARVIS HUD page.
-- Compose healthcheck probes `http://127.0.0.1:80/` (IPv4 only — nginx config does not listen on IPv6).
+- `GET /api/health` returns 200 with service status.
+- Compose healthcheck probes the API at `http://127.0.0.1:3000/api/health`.
+- Kokoro healthcheck probes `http://127.0.0.1:8880/health` (60s start period for model download).
 
 ## Notes
-- No secrets or external credentials are needed.
-- The README states this is a demo that does not connect to any backend; future integration with Base44's Superagent would require a server-side function and a secret token.
+- Kokoro TTS voice is configurable via `KOKORO_VOICE` env var (default: `af_sky`).
+- The old `nginx.dev.conf` is no longer used; the FastAPI backend serves static files directly.
+- Frontend edits hot-reload via uvicorn `--reload`. Backend edits also hot-reload.

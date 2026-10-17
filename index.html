@@ -6,7 +6,7 @@
 
 </style></head>
 <body><main class="hud" id="hud" data-state="idle">
-  <header class="topbar"><div class="wordmark"><span class="mark">J</span><span>J.A.R.V.I.S.</span></div><div class="cloud"><i></i> APERÇU · BASE44 NON RELIÉ</div><div class="controls"><button id="fullscreen" aria-label="Plein écran" title="Plein écran">⛶</button><button id="audio-toggle" aria-label="Couper la voix" title="Couper la voix">◖</button></div></header>
+  <header class="topbar"><div class="wordmark"><span class="mark">J</span><span>J.A.R.V.I.S.</span></div><div class="cloud"><i></i> SUPERAGENT · EN ATTENTE</div><div class="controls"><button id="fullscreen" aria-label="Plein écran" title="Plein écran">⛶</button><button id="audio-toggle" aria-label="Couper la voix" title="Couper la voix">◖</button></div></header>
   <div class="scene"><div class="grid"></div><div class="scanline"></div>
     <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
     <button class="core" id="core" aria-label="Appuyer pour parler à Jarvis"><span class="core-shine"></span><span class="core-heart"></span><span class="core-line line-a"></span><span class="core-line line-b"></span><span class="core-line line-c"></span></button>
@@ -15,22 +15,45 @@
     <div class="voice-hint" id="hint">Appuyez sur le noyau et parlez</div>
     <div class="ambient-caption" id="caption" aria-live="polite"></div>
   </div>
-  <footer class="bottom"><span>HUD VOCAL · RÉPONSES SIMULÉES</span><span class="local"><i></i> MODE <b id="local-status">APERÇU</b></span><span id="clock"></span></footer>
+  <footer class="bottom"><span>HUD VOCAL · SUPERAGENT BASE44</span><span class="local"><i></i> MODE <b id="local-status">APERÇU</b></span><span id="clock"></span></footer>
   <div class="toast" id="toast" role="status"></div><button class="stop" id="stop" hidden>ARRÊTER</button>
 </main><script>
 (() => {
   const hud=document.querySelector('#hud'), core=document.querySelector('#core'), label=document.querySelector('#state-label'), hint=document.querySelector('#hint'), caption=document.querySelector('#caption'), bars=[...document.querySelectorAll('.visualizer i')];
-  let recognition=null, muted=false, timer=null, anim=null;
-  const say=(text)=>{if(muted||!('speechSynthesis'in window)){setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');return} speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=.96;u.onstart=()=>{setState('speaking','JE VOUS RÉPONDS','');document.querySelector('#stop').hidden=false};u.onend=()=>{document.querySelector('#stop').hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez')};speechSynthesis.speak(u)};
+  let recognition=null, muted=false, timer=null, anim=null, currentAudio=null;
+  const say=async(text)=>{
+    if(muted){setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');return}
+    setState('speaking','JE VOUS RÉPONDS','');
+    document.querySelector('#stop').hidden=false;
+    try{
+      const r=await fetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+      if(!r.ok) throw new Error('TTS '+r.status);
+      const blob=await r.blob();
+      currentAudio=new Audio(URL.createObjectURL(blob));
+      currentAudio.onended=()=>{document.querySelector('#stop').hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');URL.revokeObjectURL(currentAudio.src);currentAudio=null};
+      await currentAudio.play();
+    }catch(e){
+      document.querySelector('#stop').hidden=true;
+      notify('Synthèse vocale indisponible');
+      setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');
+    }
+  };
+  const getReply=async(text)=>{
+    const r=await fetch('/api/chat',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
+    if(!r.ok) throw new Error('Chat '+r.status);
+    const d=await r.json();
+    return d.response;
+  };
   function setState(name,title,sub){hud.dataset.state=name;label.textContent=title;hint.textContent=sub;}
   function notify(text){const t=document.querySelector('#toast');t.textContent=text;t.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>t.classList.remove('show'),2800)}
   function waveform(on){cancelAnimationFrame(anim);if(!on){bars.forEach(b=>b.style.height='3px');return}const tick=()=>{bars.forEach((b,i)=>b.style.height=`${3+Math.random()*12}px`);anim=requestAnimationFrame(()=>setTimeout(tick,110))};tick()}
-  function demoReply(text){const t=text.toLowerCase();if(/ouvre|lance|application|fenêtre|fenetre|pc/.test(t)){return 'Je pourrais ouvrir cette application sur votre ordinateur. Dans cette maquette, le contrôle local n’est pas encore connecté.'}if(/mail|email|agenda|calend|linkedin|résum|resume|rapport/.test(t)){return 'Je vous ai compris. Dans le Jarvis final, je consulterai le bon service puis je vous répondrai à voix haute. Cette maquette n’est reliée à aucune application.'}return 'Je vous ai entendu. Cette maquette illustre la voix et les états du HUD ; elle n’est pas encore reliée à votre Superagent Base44.'}
-  function listen(){if(recognition){recognition.stop();return}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify('La reconnaissance vocale n’est pas disponible dans ce navigateur.');return}recognition=new SR();recognition.lang='fr-FR';recognition.continuous=false;recognition.interimResults=false;recognition.onstart=()=>{setState('listening','JE VOUS ÉCOUTE','Parlez, puis attendez ma réponse');waveform(true)};recognition.onerror=()=>{setState('error','MICRO INDISPONIBLE','Vérifiez l’autorisation du navigateur');waveform(false);setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),2200)};recognition.onend=()=>{recognition=null;waveform(false)};recognition.onresult=(e)=>{const spoken=e.results?.[0]?.[0]?.transcript||'';setState('thinking','JE RÉFLÉCHIS','');caption.textContent='';setTimeout(()=>{setState('executing','JE PRÉPARE LA RÉPONSE','');setTimeout(()=>say(demoReply(spoken)),500)},600)};try{recognition.start()}catch{recognition=null;notify('Impossible de démarrer le micro.')}}
+  function listen(){if(recognition){recognition.stop();return}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify('La reconnaissance vocale n’est pas disponible dans ce navigateur.');return}recognition=new SR();recognition.lang='fr-FR';recognition.continuous=false;recognition.interimResults=false;recognition.onstart=()=>{setState('listening','JE VOUS ÉCOUTE','Parlez, puis attendez ma réponse');waveform(true)};recognition.onerror=()=>{setState('error','MICRO INDISPONIBLE','Vérifiez l’autorisation du navigateur');waveform(false);setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),2200)};recognition.onend=()=>{recognition=null;waveform(false)};recognition.onresult=async(e)=>{const spoken=e.results?.[0]?.[0]?.transcript||'';setState('thinking','JE RÉFLÉCHIS','');caption.textContent='';try{const reply=await getReply(spoken);setState('executing','JE PRÉPARE LA RÉPONSE','');caption.textContent=reply;await say(reply)}catch(err){setState('error','ERREUR DE CONNEXION','Vérifiez la configuration');setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),2200)}};try{recognition.start()}catch{recognition=null;notify('Impossible de démarrer le micro.')}}
   core.addEventListener('click',listen);
   document.querySelector('#fullscreen').addEventListener('click',async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch{notify('Plein écran indisponible')}});
-  document.querySelector('#audio-toggle').addEventListener('click',()=>{muted=!muted;document.querySelector('#audio-toggle').textContent=muted?'◌':'◖';document.querySelector('#audio-toggle').title=muted?'Activer la voix':'Couper la voix';if(muted&&'speechSynthesis'in window)speechSynthesis.cancel()});
-  document.querySelector('#stop').addEventListener('click',()=>{if('speechSynthesis'in window)speechSynthesis.cancel();document.querySelector('#stop').hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez')});
+  document.querySelector('#audio-toggle').addEventListener('click',()=>{muted=!muted;document.querySelector('#audio-toggle').textContent=muted?'◌':'◖';document.querySelector('#audio-toggle').title=muted?'Activer la voix':'Couper la voix';if(muted&&currentAudio){currentAudio.pause();currentAudio=null}});
+  document.querySelector('#stop').addEventListener('click',()=>{if(currentAudio){currentAudio.pause();currentAudio=null}document.querySelector('#stop').hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez')});
+  async function checkHealth(){try{const r=await fetch('/api/health');const d=await r.json();const cloud=document.querySelector('.cloud');if(d.superagent){cloud.innerHTML='<i><\/i> SUPERAGENT · CONNECTÉ';document.querySelector('#local-status').textContent='CONNECTÉ'}else{cloud.innerHTML='<i><\/i> SUPERAGENT · EN ATTENTE'}}catch{}}
+  checkHealth();
   setInterval(()=>{document.querySelector('#clock').textContent=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit'}).format(new Date())},1000);
 })();
 

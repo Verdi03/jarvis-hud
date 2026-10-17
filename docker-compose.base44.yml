@@ -1,15 +1,41 @@
 services:
-  web:
-    image: nginx:alpine
+  api:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
     restart: on-failure
     ports:
-      - "3000:80"
+      - "3000:3000"
     volumes:
-      - ./:/usr/share/nginx/html:ro
-      - ./nginx.dev.conf:/etc/nginx/nginx.conf:ro
+      - ./:/app
+    environment:
+      - KOKORO_URL=http://kokoro:8880
+      - KOKORO_VOICE=${KOKORO_VOICE:-af_sky}
+      - BASE44_PREVIEW_MODE=${BASE44_PREVIEW_MODE:-}
+    env_file:
+      - ./.env.base44-defaults
+      - /run/base44/app.env
+    depends_on:
+      kokoro:
+        condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "-q", "--spider", "http://127.0.0.1:80/"]
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:3000/api/health')"]
       interval: 10s
-      timeout: 3s
+      timeout: 5s
       retries: 5
-      start_period: 5s
+      start_period: 10s
+
+  kokoro:
+    image: ghcr.io/remsky/kokoro-fastapi-cpu:latest
+    restart: on-failure
+    volumes:
+      - kokoro-data:/app/voices
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request;urllib.request.urlopen('http://127.0.0.1:8880/health')"]
+      interval: 15s
+      timeout: 5s
+      retries: 10
+      start_period: 60s
+
+volumes:
+  kokoro-data:

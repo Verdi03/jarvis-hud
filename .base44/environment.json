@@ -1,6 +1,37 @@
 {
   "previewPort": 3000,
-  "healthPath": "/",
+  "healthPath": "/api/health",
   "startCommand": "docker compose -f docker-compose.base44.yml up -d",
-  "secrets": []
+  "secrets": [
+    {
+      "name": "BASE44_SUPERAGENT_URL",
+      "description": "URL de l'API du Superagent Base44 (Jarvis) pour envoyer les messages",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "BASE44_SUPERAGENT_TOKEN",
+      "description": "Jeton d'authentification pour le Superagent Base44",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "GOOGLE_CLIENT_ID",
+      "description": "ID client OAuth Google pour l'API Gmail (lecture + brouillons)",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "GOOGLE_CLIENT_SECRET",
+      "description": "Secret client OAuth Google pour l'API Gmail",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "GOOGLE_REFRESH_TOKEN",
+      "description": "Refresh token OAuth Google pour l'accès Gmail hors-ligne",
+      "requiredAtBoot": false
+    },
+    {
+      "name": "N8N_WEBHOOK_URL",
+      "description": "URL du webhook n8n Cloud pour déclencher les automatisations",
+      "requiredAtBoot": false
+    }
+  ]
 }
