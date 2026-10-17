@@ -164,7 +164,7 @@
   // --- TTS via Kokoro: synthèse et lecture phrase par phrase avec préfetch ---
   async function say(text){
     if(muted){setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');return}
-    const parts=splitSentences(text).slice(0,3); // voix = 3 phrases max, texte complet dans le HUD
+    const parts=splitSentences(text); // toutes les phrases, dans l'ordre, sans coupure
     sayAbort=false;
     setState('thinking','PRÉPARATION VOIX','');
     stopBtn.hidden=false;listenBtn.hidden=true;
