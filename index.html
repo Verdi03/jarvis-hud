@@ -30,10 +30,16 @@
   const hud=document.querySelector('#hud'),core=document.querySelector('#core'),heart=document.querySelector('.core-heart'),label=document.querySelector('#state-label'),hint=document.querySelector('#hint'),caption=document.querySelector('#caption'),bars=[...document.querySelectorAll('.visualizer i')],stopBtn=document.querySelector('#stop'),toast=document.querySelector('#toast');
   let recognition=null,muted=false,timer=null,currentAudio=null,authHeader=null,audioCtx=null,micStream=null,micAnalyser=null,rafId=null,smoothedLevel=0,ttsSource=null;
 
-  // --- Config: seuil anti-bruit et lissage (réglables) ---
-  const NOISE_THRESHOLD=22;   // 0-255: en dessous = silence, pas de mouvement
-  const SMOOTH_UP=0.35;       // vitesse de réaction à la voix
-  const SMOOTH_DOWN=0.10;     // vitesse de retour au repos
+  // --- Config: calibrage, hystérésis et lissage ---
+  const SMOOTH_UP=0.35;
+  const SMOOTH_DOWN=0.10;
+  const HYST_HIGH=12;    // marge au-dessus du bruit ambiant pour activer
+  const HYST_LOW=5;      // marge en dessous pour désactiver (hystérésis)
+  const CALIB_SAMPLES=30;// ~1s à 30fps
+  const CALIB_INTERVAL=33;
+  let noiseFloor=0;
+  let isVoice=false;
+  let diagEl=null;
 
   function setState(name,title,sub){hud.dataset.state=name;label.textContent=title;hint.textContent=sub;}
   function apiFetch(url,options={}){const headers=new Headers(options.headers||{});if(authHeader)headers.set('Authorization',authHeader);return fetch(url,{...options,headers,cache:'no-store'});}
@@ -41,45 +47,106 @@
 
   function getAudioCtx(){if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();if(audioCtx.state==='suspended')audioCtx.resume();return audioCtx;}
 
+  // --- Indicateur de diagnostic temporaire ---
+  function createDiag(){
+    if(diagEl)return;
+    diagEl=document.createElement('div');
+    diagEl.style.cssText='position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:7;font:11px monospace;color:#7cdef3;background:#0a1419dd;border:1px solid #7cdef344;border-radius:6px;padding:6px 14px;letter-spacing:.05em;pointer-events:none;white-space:nowrap';
+    document.querySelector('.scene').appendChild(diagEl);
+  }
+  function updateDiag(level){
+    if(!diagEl)return;
+    const thHigh=noiseFloor+HYST_HIGH;
+    diagEl.textContent='NIV '+level.toFixed(1)+' · SEUIL '+thHigh.toFixed(1)+' · BRUIT '+noiseFloor.toFixed(1)+' · '+(isVoice?'VOIX':'SILENCE');
+  }
+  function removeDiag(){if(diagEl){diagEl.remove();diagEl=null;}}
+
   function stopVisuals(){
     if(rafId)cancelAnimationFrame(rafId);
-    rafId=null;smoothedLevel=0;
+    rafId=null;smoothedLevel=0;isVoice=false;
     bars.forEach(b=>b.style.height='3px');
     core.style.transform='';core.style.boxShadow='';
     if(heart){heart.style.opacity='';heart.style.transform='';}
+    removeDiag();
   }
 
-  // Boucle d'animation pilotée par les vraies données audio (micro ou TTS)
+  // Calibrage du bruit ambiant pendant ~1 seconde
+  async function calibrateNoise(analyser){
+    const data=new Uint8Array(analyser.frequencyBinCount);
+    let maxAvg=0;
+    for(let i=0;i<CALIB_SAMPLES;i++){
+      analyser.getByteFrequencyData(data);
+      let sum=0;const bins=Math.min(data.length,32);
+      for(let j=0;j<bins;j++)sum+=data[j];
+      const avg=sum/bins;
+      if(avg>maxAvg)maxAvg=avg;
+      if(diagEl)diagEl.textContent='CALIBRAGE '+(i+1)+'/'+CALIB_SAMPLES+' · NIV '+avg.toFixed(1);
+      await new Promise(r=>setTimeout(r,CALIB_INTERVAL));
+    }
+    noiseFloor=Math.max(maxAvg,3);
+    return noiseFloor;
+  }
+
+  // Boucle d'animation avec hystérésis et silence strict
   function startVisualLoop(analyser,applyThreshold){
     const data=new Uint8Array(analyser.frequencyBinCount);
     function tick(){
       analyser.getByteFrequencyData(data);
-      // Moyenne sur les basses fréquences (voix)
       let sum=0;const bins=Math.min(data.length,32);
       for(let i=0;i<bins;i++)sum+=data[i];
       const avg=sum/bins;
-      // Seuil anti-bruit: ignore le bruit de fond
-      const above=applyThreshold?avg>NOISE_THRESHOLD:avg>0;
-      const target=above?avg:0;
-      // Lissage asymétrique: monte vite, descend lentement
-      const rate=target>smoothedLevel?SMOOTH_UP:SMOOTH_DOWN;
-      smoothedLevel=smoothedLevel*(1-rate)+target*rate;
-      const level=Math.min(smoothedLevel/100,1);
-      // Barres: chaque barre lit une bande de fréquence réelle
+
+      let level;
+      if(applyThreshold){
+        // Hystérésis: seuil haut pour activer, seuil bas pour désactiver
+        const thHigh=noiseFloor+HYST_HIGH;
+        const thLow=noiseFloor+HYST_LOW;
+        if(avg>thHigh)isVoice=true;
+        else if(avg<thLow)isVoice=false;
+
+        if(isVoice){
+          const target=Math.max(0,(avg-noiseFloor)/(thHigh-noiseFloor));
+          const rate=target>smoothedLevel?SMOOTH_UP:SMOOTH_DOWN;
+          smoothedLevel=smoothedLevel*(1-rate)+target*rate;
+          level=Math.min(smoothedLevel,1);
+        }else{
+          // Silence strict: zéro immédiat, pas de lissage
+          smoothedLevel=0;
+          level=0;
+        }
+        updateDiag(avg);
+      }else{
+        // TTS: pas de seuil
+        const target=avg/128;
+        const rate=target>smoothedLevel?SMOOTH_UP:SMOOTH_DOWN;
+        smoothedLevel=smoothedLevel*(1-rate)+target*rate;
+        level=Math.min(smoothedLevel,1);
+      }
+
+      // Barres: strictement 3px en silence, sinon fréquence réelle
       const n=bars.length;
-      for(let i=0;i<n;i++){
-        const idx=Math.floor(i*bins/n);
-        const val=above?data[idx]:0;
-        bars[i].style.height=`${3+(val/255)*15}px`;
+      if(level===0){
+        for(let i=0;i<n;i++)bars[i].style.height='3px';
+      }else{
+        for(let i=0;i<n;i++){
+          const idx=Math.floor(i*bins/n);
+          bars[i].style.height=(3+(data[idx]/255)*15)+'px';
+        }
       }
-      // Noyau: léger scale selon le niveau
-      const scale=1+level*0.04;
-      core.style.transform=`translate(-50%,-50%) scale(${scale})`;
-      // Cœur: opacité et scale selon le niveau
-      if(heart){
-        heart.style.opacity=String(0.7+level*0.3);
-        heart.style.transform=`scale(${0.92+level*0.16})`;
+
+      // Noyau: strictement immobile en silence
+      if(level===0){
+        core.style.transform='';
+        if(heart){heart.style.opacity='';heart.style.transform='';}
+      }else{
+        const scale=1+level*0.04;
+        core.style.transform='translate(-50%,-50%) scale('+scale+')';
+        if(heart){
+          heart.style.opacity=String(0.7+level*0.3);
+          heart.style.transform='scale('+(0.92+level*0.16)+')';
+        }
       }
+
       rafId=requestAnimationFrame(tick);
     }
     tick();
@@ -102,7 +169,7 @@
       const analyser=ctx.createAnalyser();
       analyser.fftSize=256;analyser.smoothingTimeConstant=0.6;
       ttsSource.connect(analyser);analyser.connect(ctx.destination);
-      startVisualLoop(analyser,false); // pas de seuil pour le TTS
+      startVisualLoop(analyser,false);
       currentAudio.onended=()=>{
         stopVisuals();stopBtn.hidden=true;
         setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');
@@ -123,7 +190,7 @@
     const d=await r.json();return d.response;
   }
 
-  // --- Écoute: micro + reconnaissance vocale fr-FR ---
+  // --- Écoute: micro + calibrage + reconnaissance vocale fr-FR ---
   async function startListening(){
     try{
       micStream=await navigator.mediaDevices.getUserMedia({audio:true});
@@ -137,7 +204,12 @@
     micAnalyser=ctx.createAnalyser();
     micAnalyser.fftSize=256;micAnalyser.smoothingTimeConstant=0.5;
     const src=ctx.createMediaStreamSource(micStream);
-    src.connect(micAnalyser); // pas de connexion vers destination: pas de feedback
+    src.connect(micAnalyser);
+
+    // Calibrage du bruit ambiant pendant ~1s (rester silencieux)
+    setState('listening','CALIBRAGE…','Mesure du bruit ambiant — restez silencieux');
+    createDiag();
+    await calibrateNoise(micAnalyser);
 
     const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
     if(!SR){notify("La reconnaissance vocale n'est pas disponible dans ce navigateur.");stopMic();return;}
@@ -153,7 +225,7 @@
     recognition.onresult=async(e)=>{
       const spoken=e.results?.[0]?.[0]?.transcript||'';
       if(!spoken.trim()){setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');return;}
-      setState('thinking','JE RÉFLÉCHIS',''); // immobile pendant l'attente
+      setState('thinking','JE RÉFLÉCHIS','');
       caption.textContent='';
       try{
         const reply=await getReply(spoken);
@@ -196,5 +268,4 @@
   checkHealth();
   setInterval(()=>{document.querySelector('#clock').textContent=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit'}).format(new Date())},1000);
 })();
-
 </script></body></html>
