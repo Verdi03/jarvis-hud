@@ -2,10 +2,11 @@
 
 import os
 import httpx
-from fastapi import APIRouter
+from fastapi import APIRouter, Depends
+from ..auth import require_auth
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 SUPERAGENT_URL = os.getenv("BASE44_SUPERAGENT_URL", "")
 SUPERAGENT_TOKEN = os.getenv("BASE44_SUPERAGENT_TOKEN", "")
