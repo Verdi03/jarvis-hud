@@ -13,7 +13,8 @@ async def health():
     """Expose only non-secret service readiness; configuration is not proof of connectivity."""
     return {
         "status": "ok",
-        "superagent_configured": bool(os.getenv("BASE44_SUPERAGENT_URL") and os.getenv("BASE44_SUPERAGENT_TOKEN")),
+        "superagent_configured": bool(os.getenv("BASE44_SUPERAGENT_TOKEN")),
+        # Configuration alone does not prove connectivity; a real message test is still required.
         "superagent_connected": False,
         "kokoro": True,
         "gmail_configured": bool(os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET") and os.getenv("GOOGLE_REFRESH_TOKEN")),
