@@ -11,7 +11,7 @@ Interface vocale de test pour le Superagent JARVIS de Base44.
 
 ## État des connexions
 
-Le Superagent, Gmail et n8n ne sont pas configurés dans cette branche. Le code ne contient aucun jeton ni secret. La route de chat ne doit pas être considérée comme intégrée avant un test réel du contrat de l’API Superagent.
+Le HUD utilise maintenant le contrat officiel de l’API Superagents : créer/récupérer la conversation principale, puis envoyer le champ `content`. Le jeton reste côté serveur. La connexion réelle n’a pas encore été testée dans cette branche : ajouter `BASE44_SUPERAGENT_TOKEN` aux secrets Base44, puis faire un unique message fictif après vérification des crédits inclus. L’API Superagents est actuellement en bêta et consomme les crédits de l’espace de travail.
 
 Les routes de création de brouillon Gmail et de déclenchement n8n restent bloquées par défaut. Elles ne devront être activées qu’après ajout d’une validation humaine côté interface et côté serveur.
 
@@ -25,7 +25,7 @@ Le service Kokoro tourne dans le conteneur de l’environnement qui exécute Com
 
 ## Secret d’accès
 
-Dans les secrets de l’application Base44, crée un secret `JARVIS_ACCESS_PASSWORD` avec une valeur longue, unique et aléatoire. Saisis cette même valeur dans le panneau de déverrouillage du HUD. Ne l’ajoute jamais au dépôt Git et ne la partage pas dans le chat.
+Dans les secrets de l’application Base44, conserve `JARVIS_ACCESS_PASSWORD` pour l’accès privé et ajoute `BASE44_SUPERAGENT_TOKEN` pour l’API de Jarvis. Saisis le jeton uniquement dans les secrets Base44, jamais dans le HUD, le dépôt Git ou le chat. L’identifiant du Superagent existant est configuré côté serveur.
 
 Sans ce secret, les appels chat, audio, Gmail et n8n renvoient une erreur et restent inaccessibles.
 
