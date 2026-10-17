@@ -2,10 +2,11 @@
 
 import os
 import httpx
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, Depends, Response
+from ..auth import require_auth
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 KOKORO_URL = os.getenv("KOKORO_URL", "http://kokoro:8880")
 KOKORO_VOICE = os.getenv("KOKORO_VOICE", "af_sky")
