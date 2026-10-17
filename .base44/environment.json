@@ -4,6 +4,11 @@
   "startCommand": "docker compose -f docker-compose.base44.yml up -d",
   "secrets": [
     {
+      "name": "JARVIS_ACCESS_PASSWORD",
+      "description": "Mot de passe privé pour accéder aux API du HUD JARVIS",
+      "requiredAtBoot": false
+    },
+    {
       "name": "BASE44_SUPERAGENT_URL",
       "description": "URL de l'API du Superagent Base44 (Jarvis) pour envoyer les messages",
       "requiredAtBoot": false
