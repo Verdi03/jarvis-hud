@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 SUPERAGENT_ID = os.getenv("BASE44_SUPERAGENT_ID", "6ad11c7d37bc5c9d2dec1538")
 SUPERAGENT_TOKEN = os.getenv("BASE44_SUPERAGENT_TOKEN", "")
 BASE_URL = "https://app.base44.com/api/agents"
+SUPERAGENT_CONNECTED = False
 
 
 class ChatRequest(BaseModel):
@@ -61,6 +62,13 @@ async def chat(req: ChatRequest):
             )
             message_resp.raise_for_status()
             message = message_resp.json()
+    except httpx.TimeoutException:
+        # Base44 warns that a timed-out message may already have run; never retry it automatically.
+        logger.warning("Base44 Superagent request timed out; message outcome may be uncertain")
+        raise HTTPException(
+            status_code=504,
+            detail="Délai dépassé : la demande a peut-être été traitée. Vérifie la conversation Jarvis dans Base44 avant de la renvoyer.",
+        )
     except (httpx.HTTPError, ValueError, TypeError):
         # Do not expose internal details or authorization data to the browser.
         logger.exception("Base44 Superagent request failed")
@@ -75,4 +83,6 @@ async def chat(req: ChatRequest):
             status_code=502,
             detail="Base44 a répondu sans texte. Consulte les détails de la conversation dans Base44.",
         )
+    global SUPERAGENT_CONNECTED
+    SUPERAGENT_CONNECTED = True
     return ChatResponse(response=reply.strip())
