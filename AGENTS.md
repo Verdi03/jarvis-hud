@@ -22,14 +22,14 @@ docker compose -f docker-compose.base44.yml up -d --build
 ## Secrets (all optional — app boots without them)
 | Variable | Purpose |
 |---|---|
-| `BASE44_SUPERAGENT_URL` | Superagent API endpoint |
-| `BASE44_SUPERAGENT_TOKEN` | Superagent auth token |
+| `BASE44_SUPERAGENT_ID` | Identifiant du Superagent Jarvis existant (valeur par défaut configurée) |
+| `BASE44_SUPERAGENT_TOKEN` | Jeton personnel pour le Superagent (secret Base44) |
 | `GOOGLE_CLIENT_ID` | Gmail API OAuth client ID |
 | `GOOGLE_CLIENT_SECRET` | Gmail API OAuth client secret |
 | `GOOGLE_REFRESH_TOKEN` | Gmail API offline refresh token |
 | `N8N_WEBHOOK_URL` | n8n Cloud webhook URL for automations |
 
-Without secrets, the app starts in "EN ATTENTE" mode. Chat returns a "not configured" message; TTS works (Kokoro is local); Gmail and n8n return 503.
+Sans jeton Superagent, le chat répond 503 ; TTS fonctionne (Kokoro est dans l’environnement Compose) ; Gmail et n8n restent en attente. Le chat doit créer/récupérer la conversation principale puis envoyer `content` à l’API officielle. La configuration du jeton ne constitue pas une preuve de connexion : un test réel reste requis.
 
 ## Safety Rules
 - Gmail integration only reads messages and creates drafts. It NEVER sends, deletes, or modifies emails without explicit user validation.
