@@ -2,10 +2,11 @@
 
 import os
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from ..auth import require_auth
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 N8N_WEBHOOK_URL = os.getenv("N8N_WEBHOOK_URL", "")
 
@@ -16,6 +17,8 @@ class WorkflowRequest(BaseModel):
 
 @router.post("/trigger")
 async def trigger_workflow(req: WorkflowRequest):
+    if os.getenv("JARVIS_ENABLE_N8N_TRIGGER", "false").lower() != "true":
+        raise HTTPException(status_code=423, detail="Déclenchement n8n désactivé jusqu’à la mise en place d’une validation humaine.")
     if not N8N_WEBHOOK_URL:
         raise HTTPException(status_code=503, detail="n8n non configuré")
 
