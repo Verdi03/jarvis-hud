@@ -28,7 +28,7 @@
 </main><section id="access-gate" class="access-gate" role="dialog" aria-modal="true" aria-labelledby="access-title"><div class="access-card"><div class="access-kicker">J.A.R.V.I.S. · ACCÈS PRIVÉ</div><h1 id="access-title">DÉVERROUILLER LE HUD</h1><p>Entre le mot de passe privé défini dans les secrets de l'application Base44.</p><form id="access-form"><input id="access-password" type="password" autocomplete="current-password" aria-label="Mot de passe privé JARVIS" required><button type="submit">DÉVERROUILLER</button></form><p id="access-message" role="status">Le mot de passe n'est jamais enregistré dans le dépôt.</p></div></section><script>
 (() => {
   const hud=document.querySelector('#hud'),core=document.querySelector('#core'),heart=document.querySelector('.core-heart'),label=document.querySelector('#state-label'),hint=document.querySelector('#hint'),caption=document.querySelector('#caption'),bars=[...document.querySelectorAll('.visualizer i')],stopBtn=document.querySelector('#stop'),toast=document.querySelector('#toast');
-  let recognition=null,muted=false,timer=null,currentAudio=null,authHeader=null,audioCtx=null,micStream=null,micAnalyser=null,rafId=null,smoothedLevel=0,ttsSource=null;const listenBtn=document.querySelector('#listen'),testBtn=document.querySelector('#test-voice');
+  let recognition=null,muted=false,timer=null,currentAudio=null,authHeader=null,audioCtx=null,micStream=null,micAnalyser=null,rafId=null,smoothedLevel=0,ttsSource=null,sayAbort=false;const listenBtn=document.querySelector('#listen'),testBtn=document.querySelector('#test-voice');
 
   // --- Config: calibrage, hystérésis et lissage ---
   const SMOOTH_UP=0.35;
@@ -154,53 +154,59 @@
 
   function stopMic(){if(micStream){micStream.getTracks().forEach(t=>t.stop());micStream=null;}micAnalyser=null;}
 
-  // --- TTS via Kokoro (/api/tts) avec analyse audio réelle ---
+  // --- Découpage en phrases pour TTS streaming ---
+  function splitSentences(text){
+    const parts=text.match(/[^.!?…]+[.!?…]+/g);
+    if(!parts||parts.length===0)return [text.trim()];
+    return parts.map(s=>s.trim()).filter(Boolean);
+  }
+
+  // --- TTS via Kokoro: synthèse et lecture phrase par phrase avec préfetch ---
   async function say(text){
     if(muted){setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');return}
+    const parts=splitSentences(text).slice(0,3); // voix = 3 phrases max, texte complet dans le HUD
+    sayAbort=false;
     setState('thinking','PRÉPARATION VOIX','');
     stopBtn.hidden=false;listenBtn.hidden=true;
-    let blob;
-    try{
-      const r=await apiFetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text})});
-      if(!r.ok)throw new Error('HTTP '+r.status);
-      blob=await r.blob();
-      if(!blob||blob.size===0||!blob.type.startsWith('audio'))throw new Error('réponse non audio');
-    }catch(e){
-      stopVisuals();stopBtn.hidden=true;
-      notify('Kokoro /api/tts indisponible ('+e.message+')');
-      setState('error','VOIX INDISPONIBLE','Kokoro ou /api/tts a échoué');
-      setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),4000);
-      return;
-    }
     const ctx=getAudioCtx();
-    currentAudio=new Audio(URL.createObjectURL(blob));
-    ttsSource=ctx.createMediaElementSource(currentAudio);
     const analyser=ctx.createAnalyser();
     analyser.fftSize=256;analyser.smoothingTimeConstant=0.6;
-    ttsSource.connect(analyser);analyser.connect(ctx.destination);
-    currentAudio.onended=()=>{
-      stopVisuals();stopBtn.hidden=true;listenBtn.hidden=true;
-      setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');
-      URL.revokeObjectURL(currentAudio.src);currentAudio=null;ttsSource=null;
-    };
-    currentAudio.onplaying=()=>{
-      setState('speaking','JARVIS PARLE','');
-      startVisualLoop(analyser,false);
-    };
+    analyser.connect(ctx.destination);
+    let firstPlayed=false;const t0=performance.now();
+    async function fetchTTS(s){
+      const r=await apiFetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:s})});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      const b=await r.blob();
+      if(!b||b.size===0||!b.type.startsWith('audio'))throw new Error('non audio');
+      return b;
+    }
+    function playBlob(b){
+      return new Promise((res,rej)=>{
+        const a=new Audio(URL.createObjectURL(b));
+        const src=ctx.createMediaElementSource(a);
+        src.connect(analyser);
+        currentAudio=a;
+        a.onplaying=()=>{if(!firstPlayed){firstPlayed=true;setState('speaking','JARVIS PARLE','');startVisualLoop(analyser,false);notify('Lecture démarrée ('+(Math.round((performance.now()-t0)/100)/10)+'s)');}};
+        a.onended=()=>{URL.revokeObjectURL(a.src);res();};
+        a.onpause=()=>{if(sayAbort){URL.revokeObjectURL(a.src);res();}};
+        a.onerror=()=>{URL.revokeObjectURL(a.src);rej(new Error('lecture'));};
+        a.play().catch(rej);
+      });
+    }
     try{
-      await currentAudio.play();
-    }catch(e){
-      if(e.name==='NotAllowedError'){
-        stopVisuals();stopBtn.hidden=true;
-        listenBtn.hidden=false;
-        setState('idle','LECTURE BLOQUÉE','Cliquez sur « Écouter la réponse »');
-        notify('Lecture automatique bloquée par le navigateur');
-      }else{
-        stopVisuals();stopBtn.hidden=true;listenBtn.hidden=true;
-        notify('Lecture audio impossible: '+e.message);
-        setState('error','ERREUR LECTURE','Impossible de lire l\'audio');
-        setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),4000);
+      let next=fetchTTS(parts[0]);
+      for(let i=0;i<parts.length;i++){
+        if(sayAbort)break;
+        const blob=await next;
+        if(sayAbort)break;
+        if(i+1<parts.length)next=fetchTTS(parts[i+1]); // préfetch phrase suivante pendant la lecture
+        await playBlob(blob);
       }
+      if(!sayAbort){stopVisuals();stopBtn.hidden=true;listenBtn.hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');currentAudio=null;}
+    }catch(e){
+      stopVisuals();stopBtn.hidden=true;
+      if(e.name==='NotAllowedError'){listenBtn.hidden=false;setState('idle','LECTURE BLOQUÉE','Cliquez sur « Écouter la réponse »');notify('Lecture automatique bloquée par le navigateur');}
+      else{notify('Voix indisponible: '+e.message);setState('error','VOIX INDISPONIBLE',e.message);setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),4000);}
     }
   }
 
@@ -315,6 +321,7 @@
   }
 
   function stopAll(){
+    sayAbort=true;
     if(recognition){recognition.stop();recognition=null;}
     if(currentAudio){currentAudio.pause();URL.revokeObjectURL(currentAudio.src);currentAudio=null;ttsSource=null;}
     stopVisuals();stopMic();stopBtn.hidden=true;listenBtn.hidden=true;if(testBtn)testBtn.disabled=false;
@@ -337,7 +344,7 @@
 
   // --- Authentification ---
   const accessGate=document.querySelector('#access-gate'),accessForm=document.querySelector('#access-form'),accessInput=document.querySelector('#access-password'),accessMessage=document.querySelector('#access-message');
-  accessForm.addEventListener('submit',async(e)=>{e.preventDefault();accessMessage.textContent='Vérification…';try{authHeader='Basic '+btoa('jarvis:'+accessInput.value);const r=await fetch('/api/auth/check',{headers:{Authorization:authHeader},cache:'no-store'});if(!r.ok){const d=await r.json().catch(()=>({}));authHeader=null;accessMessage.textContent=d.detail||'Accès refusé.';return}accessInput.value='';accessGate.hidden=true;checkHealth()}catch{authHeader=null;accessMessage.textContent='Serveur inaccessible.'}});
+  accessForm.addEventListener('submit',async(e)=>{e.preventDefault();accessMessage.textContent='Vérification…';try{authHeader='Basic '+btoa('jarvis:'+accessInput.value);const r=await fetch('/api/auth/check',{headers:{Authorization:authHeader},cache:'no-store'});if(!r.ok){const d=await r.json().catch(()=>({}));authHeader=null;accessMessage.textContent=d.detail||'Accès refusé.';return}accessInput.value='';accessGate.hidden=true;checkHealth();apiFetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'.'})}).catch(()=>{})}catch{authHeader=null;accessMessage.textContent='Serveur inaccessible.'}});
 
   // --- Santé du Superagent ---
   async function checkHealth(){try{const r=await fetch('/api/health');const d=await r.json();const cloud=document.querySelector('.cloud');if(d.superagent_connected){cloud.innerHTML='<i><\/i> SUPERAGENT · CONNECTÉ';document.querySelector('#local-status').textContent='CONNECTÉ'}else if(d.superagent_configured){cloud.innerHTML='<i><\/i> SUPERAGENT · PRÊT À TESTER';document.querySelector('#local-status').textContent='CONFIGURÉ'}else{cloud.innerHTML='<i><\/i> SUPERAGENT · EN ATTENTE';document.querySelector('#local-status').textContent='APERÇU'}}catch{}}
