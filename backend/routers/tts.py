@@ -9,7 +9,7 @@ from pydantic import BaseModel
 router = APIRouter(dependencies=[Depends(require_auth)])
 
 KOKORO_URL = os.getenv("KOKORO_URL", "http://kokoro:8880")
-KOKORO_VOICE = os.getenv("KOKORO_VOICE", "af_sky")
+KOKORO_VOICE = os.getenv("KOKORO_VOICE", "ff_siwis")
 
 
 class TTSRequest(BaseModel):
