@@ -7,10 +7,11 @@ Only read and draft creation are supported.
 import os
 import base64
 import httpx
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
+from ..auth import require_auth
 from pydantic import BaseModel
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_auth)])
 
 
 class DraftRequest(BaseModel):
@@ -79,7 +80,9 @@ async def list_messages(max_results: int = 10):
 
 @router.post("/draft")
 async def create_draft(req: DraftRequest):
-    """Create a draft email. Never sends — requires user validation to send."""
+    """Create a draft email only after an approval center is implemented."""
+    if os.getenv("JARVIS_ENABLE_GMAIL_DRAFTS", "false").lower() != "true":
+        raise HTTPException(status_code=423, detail="Création de brouillons désactivée jusqu’à la mise en place d’une validation humaine.")
     token = await _get_access_token()
 
     raw = (
