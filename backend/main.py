@@ -15,7 +15,7 @@ async def health():
         "status": "ok",
         "superagent_configured": bool(os.getenv("BASE44_SUPERAGENT_TOKEN")),
         # Configuration alone does not prove connectivity; a real message test is still required.
-        "superagent_connected": False,
+        "superagent_connected": chat.SUPERAGENT_CONNECTED,
         "kokoro": True,
         "gmail_configured": bool(os.getenv("GOOGLE_CLIENT_ID") and os.getenv("GOOGLE_CLIENT_SECRET") and os.getenv("GOOGLE_REFRESH_TOKEN")),
         "n8n_configured": bool(os.getenv("N8N_WEBHOOK_URL")),
