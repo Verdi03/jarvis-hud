@@ -37,3 +37,9 @@ app.include_router(n8n.router, prefix="/api/n8n", tags=["n8n"])
 @app.get("/")
 async def index():
     return FileResponse("/app/index.html")
+
+
+@app.get("/favicon.ico")
+async def favicon():
+    from fastapi.responses import Response
+    return Response(status_code=204)  # no dedicated icon asset; 204 prevents 404 noise
