@@ -9,13 +9,8 @@
       "requiredAtBoot": false
     },
     {
-      "name": "BASE44_SUPERAGENT_URL",
-      "description": "URL de l'API du Superagent Base44 (Jarvis) pour envoyer les messages",
-      "requiredAtBoot": false
-    },
-    {
       "name": "BASE44_SUPERAGENT_TOKEN",
-      "description": "Jeton d'authentification pour le Superagent Base44",
+      "description": "Jeton personnel conservé côté serveur pour appeler le Superagent Jarvis Base44",
       "requiredAtBoot": false
     },
     {
