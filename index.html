@@ -2,7 +2,7 @@
 <html lang="fr">
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#05090e"><title>JARVIS · Interface vocale</title><style>
 
-:root{color-scheme:dark;--cyan:#7cdef3;--ice:#d8f8ff;--bg:#05090e;--muted:#72808d}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#eaf5f8;font-family:Manrope,'Segoe UI',sans-serif}body{min-height:100vh}.hud{height:100svh;min-height:500px;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 49%,#10212d 0,#09121a 38%,#05090e 73%);--glow:#64d9f1}.topbar,.bottom{position:absolute;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,62px);font-size:9px;letter-spacing:.2em;color:#71808c}.topbar{top:0;height:70px;border-bottom:1px solid #c0f5ff0b}.wordmark{display:flex;gap:10px;align-items:center;color:#cdebf1;font-size:10px;font-weight:500;letter-spacing:.22em}.mark{width:25px;height:25px;border:1px solid #84dff180;border-radius:50%;display:grid;place-items:center;font-size:13px;color:#bff3ff;box-shadow:0 0 15px #69cee52a}.cloud,.local{display:flex;align-items:center;gap:9px}.cloud i,.local i,.state-led{width:5px;height:5px;border-radius:50%;background:#77d6a1;box-shadow:0 0 9px #77d6a1}.controls{display:flex;gap:16px}.controls button{font-size:18px;color:#92a0ab;background:transparent;border:0;cursor:pointer}.scene{position:absolute;inset:70px 0 60px;display:grid;place-items:center;isolation:isolate}.grid{position:absolute;inset:0;opacity:.17;background-image:linear-gradient(#7fcbe512 1px,transparent 1px),linear-gradient(90deg,#7fcbe512 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse,black 0,transparent 66%)}.scanline{position:absolute;inset:5% 0;background:linear-gradient(transparent 48%,#99eaff07 50%,transparent 52%);background-size:100% 9px;opacity:.35;pointer-events:none}.orbit{position:absolute;left:50%;top:46%;border-radius:50%;border:1px solid #85dff222;transform:translate(-50%,-50%);pointer-events:none}.orbit-one{width:min(37vw,390px);height:min(37vw,390px);border-left-color:#8de6f45e;border-right-color:#8de6f40c;animation:spin 36s linear infinite}.orbit-two{width:min(48vw,510px);height:min(48vw,510px);border-top-color:#8de6f440;border-bottom-color:#8de6f408;transform:translate(-50%,-50%) rotateX(67deg);animation:spin-rev 48s linear infinite}.orbit-three{width:min(57vw,620px);height:min(57vw,620px);border-style:dashed;border-color:#8de6f412;animation:spin 110s linear infinite}.core{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:clamp(118px,16vw,168px);height:clamp(118px,16vw,168px);border-radius:50%;border:1px solid #a5eff287;background:radial-gradient(circle at 48% 45%,#203e4b 0,#132a37 42%,#0b1721 72%,#08121a 100%);box-shadow:0 0 0 7px #8ee7f40a,0 0 0 15px #8ee7f407,inset 0 0 32px #64d9f148,0 0 45px #57d1ea35,0 0 100px #45bedb20;cursor:pointer;z-index:2;transition:transform .08s ease-out,box-shadow .3s}.core:hover{transform:translate(-50%,-50%) scale(1.025)}.core-shine{position:absolute;inset:12%;border-radius:50%;border:1px solid #c7f9ff75;transform:scaleY(.37) rotate(-27deg);box-shadow:0 0 22px #80dff647}.core-line{position:absolute;inset:12%;border-radius:50%;border:1px solid #8be7f566;transform:scaleY(.36) rotate(43deg)}.line-b{transform:scaleY(.36) rotate(-43deg);inset:10%}.line-c{transform:scaleY(.34) rotate(90deg);inset:14%;border-color:#9ff2fa4d}.core-heart{position:absolute;inset:37%;border-radius:50%;background:radial-gradient(circle at 38% 35%,white,#a7eff8 29%,#48b8d0 65%,#1c566b);box-shadow:0 0 18px #b4f6ff,0 0 44px #50d5ee9c;transition:opacity .1s,transform .1s}.visualizer{position:absolute;top:calc(46% + clamp(112px,15vw,164px));left:50%;transform:translateX(-50%);height:18px;display:flex;align-items:center;gap:4px;opacity:.38}.visualizer i{width:2px;height:3px;border-radius:2px;background:#9cecf8;box-shadow:0 0 7px #76d7e8;transition:height .08s ease-out}.voice-state{position:absolute;top:calc(46% + clamp(158px,20vw,210px));display:flex;align-items:center;gap:9px;font-size:9px;letter-spacing:.24em;color:#a7c0c8}.voice-hint{position:absolute;top:calc(46% + clamp(187px,23vw,243px));font-size:11px;font-weight:300;color:#697d89;letter-spacing:.035em}.ambient-caption{position:absolute;bottom:7%;font-size:10px;color:#8da1aa;letter-spacing:.16em;text-transform:uppercase;min-height:16px;transition:opacity .25s}.bottom{bottom:0;height:60px;border-top:1px solid #c0f5ff0b}.local b{font-size:8px;font-weight:400;color:#8d9ba4;letter-spacing:.1em}.toast{position:absolute;top:82px;left:50%;transform:translateX(-50%);border:1px solid #ffffff1e;background:#111b24dd;border-radius:20px;padding:10px 16px;color:#cbdbe0;font-size:11px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}.toast.show{opacity:1}.stop{position:absolute;z-index:8;bottom:77px;left:50%;transform:translateX(-50%);border:1px solid #f38e8e50;background:#411e24;color:#ffc5c5;border-radius:18px;padding:9px 16px;font:9px Manrope;letter-spacing:.13em;cursor:pointer}.listen{position:absolute;z-index:8;bottom:77px;left:50%;transform:translateX(-50%);border:1px solid #7cdef380;background:#0e2a33;color:#d8f8ff;border-radius:18px;padding:9px 16px;font:9px Manrope;letter-spacing:.13em;cursor:pointer}[hidden]{display:none!important}#hud[data-state="listening"]{--glow:#8cecff}#hud[data-state="listening"] .core{box-shadow:0 0 0 9px #9defff12,0 0 0 21px #9defff08,inset 0 0 45px #64d9f177,0 0 55px #57d1ea72,0 0 135px #45bedb44}#hud[data-state="listening"] .state-led{background:#83e6f7;box-shadow:0 0 12px #83e6f7;animation:blink .8s infinite}#hud[data-state="speaking"] .state-led{background:#8cecff;box-shadow:0 0 12px #8cecff}@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes spin-rev{to{transform:translate(-50%,-50%) rotateX(67deg) rotate(-360deg)}}@keyframes blink{50%{opacity:.3}}@media(max-width:600px){.topbar{height:58px}.scene{inset:58px 0 52px}.bottom{height:52px;padding:0 15px;font-size:7px}.wordmark{font-size:9px}.cloud{font-size:7px;letter-spacing:.1em}.controls{gap:8px}.orbit-one{width:64vw;height:64vw}.orbit-two{width:78vw;height:78vw}.orbit-three{width:90vw;height:90vw}.voice-state{letter-spacing:.17em}.voice-hint{font-size:10px}.ambient-caption{bottom:6%;font-size:8px}}
+:root{color-scheme:dark;--cyan:#7cdef3;--ice:#d8f8ff;--bg:#05090e;--muted:#72808d}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#eaf5f8;font-family:Manrope,'Segoe UI',sans-serif}body{min-height:100vh}.hud{height:100svh;min-height:500px;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 49%,#10212d 0,#09121a 38%,#05090e 73%);--glow:#64d9f1}.topbar,.bottom{position:absolute;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,62px);font-size:9px;letter-spacing:.2em;color:#71808c}.topbar{top:0;height:70px;border-bottom:1px solid #c0f5ff0b}.wordmark{display:flex;gap:10px;align-items:center;color:#cdebf1;font-size:10px;font-weight:500;letter-spacing:.22em}.mark{width:25px;height:25px;border:1px solid #84dff180;border-radius:50%;display:grid;place-items:center;font-size:13px;color:#bff3ff;box-shadow:0 0 15px #69cee52a}.cloud,.local{display:flex;align-items:center;gap:9px}.cloud i,.local i,.state-led{width:5px;height:5px;border-radius:50%;background:#77d6a1;box-shadow:0 0 9px #77d6a1}.controls{display:flex;gap:16px}.controls button{font-size:18px;color:#92a0ab;background:transparent;border:0;cursor:pointer}.scene{position:absolute;inset:70px 0 60px;display:grid;place-items:center;isolation:isolate}.grid{position:absolute;inset:0;opacity:.17;background-image:linear-gradient(#7fcbe512 1px,transparent 1px),linear-gradient(90deg,#7fcbe512 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse,black 0,transparent 66%)}.scanline{position:absolute;inset:5% 0;background:linear-gradient(transparent 48%,#99eaff07 50%,transparent 52%);background-size:100% 9px;opacity:.35;pointer-events:none}.orbit{position:absolute;left:50%;top:46%;border-radius:50%;border:1px solid #85dff222;transform:translate(-50%,-50%);pointer-events:none}.orbit-one{width:min(37vw,390px);height:min(37vw,390px);border-left-color:#8de6f45e;border-right-color:#8de6f40c;animation:spin 36s linear infinite}.orbit-two{width:min(48vw,510px);height:min(48vw,510px);border-top-color:#8de6f440;border-bottom-color:#8de6f408;transform:translate(-50%,-50%) rotateX(67deg);animation:spin-rev 48s linear infinite}.orbit-three{width:min(57vw,620px);height:min(57vw,620px);border-style:dashed;border-color:#8de6f412;animation:spin 110s linear infinite}.core{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:clamp(118px,16vw,168px);height:clamp(118px,16vw,168px);border-radius:50%;border:1px solid #a5eff287;background:radial-gradient(circle at 48% 45%,#203e4b 0,#132a37 42%,#0b1721 72%,#08121a 100%);box-shadow:0 0 0 7px #8ee7f40a,0 0 0 15px #8ee7f407,inset 0 0 32px #64d9f148,0 0 45px #57d1ea35,0 0 100px #45bedb20;cursor:pointer;z-index:2;transition:transform .08s ease-out,box-shadow .3s}.core:hover{transform:translate(-50%,-50%) scale(1.025)}.core-shine{position:absolute;inset:12%;border-radius:50%;border:1px solid #c7f9ff75;transform:scaleY(.37) rotate(-27deg);box-shadow:0 0 22px #80dff647}.core-line{position:absolute;inset:12%;border-radius:50%;border:1px solid #8be7f566;transform:scaleY(.36) rotate(43deg)}.line-b{transform:scaleY(.36) rotate(-43deg);inset:10%}.line-c{transform:scaleY(.34) rotate(90deg);inset:14%;border-color:#9ff2fa4d}.core-heart{position:absolute;inset:37%;border-radius:50%;background:radial-gradient(circle at 38% 35%,white,#a7eff8 29%,#48b8d0 65%,#1c566b);box-shadow:0 0 18px #b4f6ff,0 0 44px #50d5ee9c;transition:opacity .1s,transform .1s}.visualizer{position:absolute;top:calc(46% + clamp(112px,15vw,164px));left:50%;transform:translateX(-50%);height:18px;display:flex;align-items:center;gap:4px;opacity:.38}.visualizer i{width:2px;height:3px;border-radius:2px;background:#9cecf8;box-shadow:0 0 7px #76d7e8;transition:height .08s ease-out}.voice-state{position:absolute;top:calc(46% + clamp(158px,20vw,210px));display:flex;align-items:center;gap:9px;font-size:9px;letter-spacing:.24em;color:#a7c0c8}.voice-hint{position:absolute;top:calc(46% + clamp(187px,23vw,243px));font-size:11px;font-weight:300;color:#697d89;letter-spacing:.035em}.ambient-caption{position:absolute;bottom:7%;font-size:10px;color:#8da1aa;letter-spacing:.16em;text-transform:uppercase;min-height:16px;transition:opacity .25s}.bottom{bottom:0;height:60px;border-top:1px solid #c0f5ff0b}.local b{font-size:8px;font-weight:400;color:#8d9ba4;letter-spacing:.1em}.toast{position:absolute;top:82px;left:50%;transform:translateX(-50%);border:1px solid #ffffff1e;background:#111b24dd;border-radius:20px;padding:10px 16px;color:#cbdbe0;font-size:11px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}.toast.show{opacity:1}.stop{position:absolute;z-index:8;bottom:77px;left:50%;transform:translateX(-50%);border:1px solid #f38e8e50;background:#411e24;color:#ffc5c5;border-radius:18px;padding:9px 16px;font:9px Manrope;letter-spacing:.13em;cursor:pointer}.listen{position:absolute;z-index:8;bottom:77px;left:50%;transform:translateX(-50%);border:1px solid #7cdef380;background:#0e2a33;color:#d8f8ff;border-radius:18px;padding:9px 16px;font:9px Manrope;letter-spacing:.13em;cursor:pointer}.controls .test-voice-btn{font-size:8px;letter-spacing:.13em;color:#7cdef3;border:1px solid #7cdef354;border-radius:10px;padding:5px 10px;background:transparent;cursor:pointer;white-space:nowrap}.controls .test-voice-btn:hover{background:#7cdef31a}.controls .test-voice-btn:disabled{opacity:.4;cursor:default}[hidden]{display:none!important}#hud[data-state="listening"]{--glow:#8cecff}#hud[data-state="listening"] .core{box-shadow:0 0 0 9px #9defff12,0 0 0 21px #9defff08,inset 0 0 45px #64d9f177,0 0 55px #57d1ea72,0 0 135px #45bedb44}#hud[data-state="listening"] .state-led{background:#83e6f7;box-shadow:0 0 12px #83e6f7;animation:blink .8s infinite}#hud[data-state="speaking"] .state-led{background:#8cecff;box-shadow:0 0 12px #8cecff}@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes spin-rev{to{transform:translate(-50%,-50%) rotateX(67deg) rotate(-360deg)}}@keyframes blink{50%{opacity:.3}}@media(max-width:600px){.topbar{height:58px}.scene{inset:58px 0 52px}.bottom{height:52px;padding:0 15px;font-size:7px}.wordmark{font-size:9px}.cloud{font-size:7px;letter-spacing:.1em}.controls{gap:8px}.orbit-one{width:64vw;height:64vw}.orbit-two{width:78vw;height:78vw}.orbit-three{width:90vw;height:90vw}.voice-state{letter-spacing:.17em}.voice-hint{font-size:10px}.ambient-caption{bottom:6%;font-size:8px}}
 
 </style><style>
 .access-gate{position:fixed;inset:0;z-index:20;display:grid;place-items:center;padding:24px;background:#03070beF;backdrop-filter:blur(12px)}
@@ -14,7 +14,7 @@
 .access-card button{width:100%;padding:12px;border:1px solid #7cdef3;border-radius:8px;background:#10313d;color:#d8f8ff;font-weight:600;cursor:pointer}
 #access-message{min-height:18px;color:#e7c58d}
 </style></head><body><main class="hud" id="hud" data-state="idle">
-  <header class="topbar"><div class="wordmark"><span class="mark">J</span><span>J.A.R.V.I.S.</span></div><div class="cloud"><i></i> SUPERAGENT · EN ATTENTE</div><div class="controls"><button id="fullscreen" aria-label="Plein écran" title="Plein écran">⛶</button><button id="audio-toggle" aria-label="Couper la voix" title="Couper la voix">◖</button></div></header>
+  <header class="topbar"><div class="wordmark"><span class="mark">J</span><span>J.A.R.V.I.S.</span></div><div class="cloud"><i></i> SUPERAGENT · EN ATTENTE</div><div class="controls"><button id="test-voice" class="test-voice-btn" title="Tester la synthèse vocale Kokoro">TESTER LA VOIX</button><button id="fullscreen" aria-label="Plein écran" title="Plein écran">⛶</button><button id="audio-toggle" aria-label="Couper la voix" title="Couper la voix">◖</button></div></header>
   <div class="scene"><div class="grid"></div><div class="scanline"></div>
     <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
     <button class="core" id="core" aria-label="Appuyer pour parler à Jarvis"><span class="core-shine"></span><span class="core-heart"></span><span class="core-line line-a"></span><span class="core-line line-b"></span><span class="core-line line-c"></span></button>
@@ -28,7 +28,7 @@
 </main><section id="access-gate" class="access-gate" role="dialog" aria-modal="true" aria-labelledby="access-title"><div class="access-card"><div class="access-kicker">J.A.R.V.I.S. · ACCÈS PRIVÉ</div><h1 id="access-title">DÉVERROUILLER LE HUD</h1><p>Entre le mot de passe privé défini dans les secrets de l'application Base44.</p><form id="access-form"><input id="access-password" type="password" autocomplete="current-password" aria-label="Mot de passe privé JARVIS" required><button type="submit">DÉVERROUILLER</button></form><p id="access-message" role="status">Le mot de passe n'est jamais enregistré dans le dépôt.</p></div></section><script>
 (() => {
   const hud=document.querySelector('#hud'),core=document.querySelector('#core'),heart=document.querySelector('.core-heart'),label=document.querySelector('#state-label'),hint=document.querySelector('#hint'),caption=document.querySelector('#caption'),bars=[...document.querySelectorAll('.visualizer i')],stopBtn=document.querySelector('#stop'),toast=document.querySelector('#toast');
-  let recognition=null,muted=false,timer=null,currentAudio=null,authHeader=null,audioCtx=null,micStream=null,micAnalyser=null,rafId=null,smoothedLevel=0,ttsSource=null;const listenBtn=document.querySelector('#listen');
+  let recognition=null,muted=false,timer=null,currentAudio=null,authHeader=null,audioCtx=null,micStream=null,micAnalyser=null,rafId=null,smoothedLevel=0,ttsSource=null;const listenBtn=document.querySelector('#listen'),testBtn=document.querySelector('#test-voice');
 
   // --- Config: calibrage, hystérésis et lissage ---
   const SMOOTH_UP=0.35;
@@ -206,8 +206,55 @@
 
   // --- Test TTS local (sans appeler /api/chat) ---
   async function testTTS(){
-    if(hud.dataset.state==='listening'||hud.dataset.state==='thinking'){return}
-    await say('Test audio local de Jarvis. La synthèse vocale fonctionne correctement.');
+    if(hud.dataset.state==='listening'||hud.dataset.state==='thinking'||hud.dataset.state==='speaking'){notify('Test déjà en cours');return;}
+    testBtn.disabled=true;
+    setState('thinking','TEST VOIX','Clic reçu — requête TTS…');
+    notify('Clic reçu — requête TTS en cours…');
+    let blob;
+    try{
+      const r=await apiFetch('/api/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({text:'Test audio de Jarvis.'})});
+      if(!r.ok)throw new Error('HTTP '+r.status);
+      blob=await r.blob();
+      if(!blob||blob.size===0||!blob.type.startsWith('audio'))throw new Error('réponse non audio ('+(blob?blob.type:'vide')+')');
+      notify('Audio reçu ('+blob.size+' octets) — lecture…');
+    }catch(e){
+      testBtn.disabled=false;stopVisuals();
+      notify('TTS échoué: '+e.message);
+      setState('error','VOIX INDISPONIBLE','Kokoro /api/tts: '+e.message);
+      setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),4000);
+      return;
+    }
+    const ctx=getAudioCtx();
+    currentAudio=new Audio(URL.createObjectURL(blob));
+    ttsSource=ctx.createMediaElementSource(currentAudio);
+    const analyser=ctx.createAnalyser();
+    analyser.fftSize=256;analyser.smoothingTimeConstant=0.6;
+    ttsSource.connect(analyser);analyser.connect(ctx.destination);
+    currentAudio.onended=()=>{
+      stopVisuals();listenBtn.hidden=true;
+      setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');
+      URL.revokeObjectURL(currentAudio.src);currentAudio=null;ttsSource=null;
+      testBtn.disabled=false;notify('Test voix terminé');
+    };
+    currentAudio.onplaying=()=>{
+      setState('speaking','JARVIS PARLE','Lecture audio démarrée');
+      startVisualLoop(analyser,false);notify('Lecture démarrée');
+    };
+    try{
+      await currentAudio.play();
+    }catch(e){
+      testBtn.disabled=false;
+      if(e.name==='NotAllowedError'){
+        stopVisuals();listenBtn.hidden=false;
+        setState('idle','LECTURE BLOQUÉE','Cliquez sur « Écouter la réponse »');
+        notify('Lecture automatique bloquée — cliquez le bouton');
+      }else{
+        stopVisuals();
+        notify('Lecture impossible: '+e.message);
+        setState('error','ERREUR LECTURE',e.message);
+        setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),4000);
+      }
+    }
   }
 
   // --- Chat: envoie le texte au backend existant /api/chat ---
@@ -270,7 +317,7 @@
   function stopAll(){
     if(recognition){recognition.stop();recognition=null;}
     if(currentAudio){currentAudio.pause();URL.revokeObjectURL(currentAudio.src);currentAudio=null;ttsSource=null;}
-    stopVisuals();stopMic();stopBtn.hidden=true;listenBtn.hidden=true;
+    stopVisuals();stopMic();stopBtn.hidden=true;listenBtn.hidden=true;if(testBtn)testBtn.disabled=false;
     setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');
   }
 
@@ -286,7 +333,7 @@
   document.querySelector('#audio-toggle').addEventListener('click',()=>{muted=!muted;document.querySelector('#audio-toggle').textContent=muted?'◌':'◖';document.querySelector('#audio-toggle').title=muted?'Activer la voix':'Couper la voix';if(muted&&currentAudio)stopAll();});
   stopBtn.addEventListener('click',stopAll);
   listenBtn.addEventListener('click',()=>{listenBtn.hidden=true;stopBtn.hidden=false;if(currentAudio)currentAudio.play().catch(err=>{notify('Lecture impossible: '+err.message);setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');});});
-  document.addEventListener('keydown',(e)=>{if(e.key==='t'||e.key==='T'){if(document.activeElement&&document.activeElement.tagName==='INPUT')return;e.preventDefault();testTTS();}});
+  testBtn.addEventListener('click',testTTS);
 
   // --- Authentification ---
   const accessGate=document.querySelector('#access-gate'),accessForm=document.querySelector('#access-form'),accessInput=document.querySelector('#access-password'),accessMessage=document.querySelector('#access-message');
