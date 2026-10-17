@@ -1,21 +1,37 @@
-# JARVIS HUD
+# JARVIS HUD — prototype privé
 
-Interface vocale de démonstration, prévue pour être intégrée à Base44.
+Interface vocale de test pour le Superagent JARVIS de Base44.
 
-## État de cette version
+## Ce qui fonctionne
 
-- Le noyau animé et l'interface sont présents.
-- Le navigateur peut demander l'accès au micro et reconnaître une phrase en français.
-- La réponse est simulée dans le navigateur et lue avec la synthèse vocale disponible.
-- **Aucun échange n'est envoyé au Superagent Base44.**
-- Aucun jeton, mot de passe ou secret n'est inclus dans le dépôt.
+- HUD animé avec entrée vocale via Web Speech API du navigateur.
+- Synthèse française Kokoro via la voix `ff_siwis`.
+- Backend FastAPI lancé avec Docker Compose.
+- Accès aux routes API fermé tant que `JARVIS_ACCESS_PASSWORD` n’est pas défini.
 
-## Aperçu
+## État des connexions
 
-Ouvrir `index.html` dans Chrome ou Edge, autoriser le micro, puis cliquer sur le noyau et parler. La synthèse vocale dépend des voix installées dans le navigateur.
+Le Superagent, Gmail et n8n ne sont pas configurés dans cette branche. Le code ne contient aucun jeton ni secret. La route de chat ne doit pas être considérée comme intégrée avant un test réel du contrat de l’API Superagent.
 
-## Étape d'intégration à faire dans Base44
+Les routes de création de brouillon Gmail et de déclenchement n8n restent bloquées par défaut. Elles ne devront être activées qu’après ajout d’une validation humaine côté interface et côté serveur.
 
-Le HUD devra appeler une fonction serveur Base44 qui transmet la demande au Superagent existant. Le jeton du Superagent devra être enregistré uniquement dans les secrets serveur de Base44, jamais dans ce dépôt ni dans le navigateur. Le site ne devra afficher « connecté » qu'après un test réel réussi.
+## Démarrage du prototype
 
-Cette version ne contient pas encore cette fonction serveur. Elle ne doit donc pas être considérée comme un JARVIS opérationnel.
+```sh
+docker compose -f docker-compose.base44.yml up -d --build
+```
+
+Le service Kokoro tourne dans le conteneur de l’environnement qui exécute Compose. Cela ne signifie pas qu’il est installé sur le PC Windows de l’utilisateur.
+
+## Secret d’accès
+
+Dans les secrets de l’application Base44, crée un secret `JARVIS_ACCESS_PASSWORD` avec une valeur longue, unique et aléatoire. Saisis cette même valeur dans le panneau de déverrouillage du HUD. Ne l’ajoute jamais au dépôt Git et ne la partage pas dans le chat.
+
+Sans ce secret, les appels chat, audio, Gmail et n8n renvoient une erreur et restent inaccessibles.
+
+## Règles
+
+- Aucun LLM local et aucun second cerveau.
+- Pas d’envoi, suppression ou modification de mail sans validation explicite.
+- Pas de déclenchement n8n sans validation explicite.
+- Aucune publication de cette version n’est effectuée par ces instructions.
