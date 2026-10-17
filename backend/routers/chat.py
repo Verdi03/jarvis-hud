@@ -38,10 +38,8 @@ async def chat(req: ChatRequest):
             detail="Le Superagent Jarvis n'est pas encore connecté au HUD.",
         )
 
-    headers = {
-        "Authorization": f"Bearer {SUPERAGENT_TOKEN}",
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
-    }
+    # Keep the HTTP client identity truthful; do not impersonate a browser to bypass Cloudflare.
+    headers = {"Authorization": f"Bearer {SUPERAGENT_TOKEN}"}
     timeout = httpx.Timeout(connect=10, read=300, write=30, pool=10)
 
     try:
