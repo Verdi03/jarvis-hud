@@ -10,7 +10,7 @@ services:
       - ./:/app
     environment:
       - KOKORO_URL=http://kokoro:8880
-      - KOKORO_VOICE=${KOKORO_VOICE:-af_sky}
+      - KOKORO_VOICE=${KOKORO_VOICE:-ff_siwis}
       - BASE44_PREVIEW_MODE=${BASE44_PREVIEW_MODE:-}
     env_file:
       - ./.env.base44-defaults
