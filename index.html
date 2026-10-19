@@ -107,7 +107,7 @@ if(!r.ok){
   const err=payload.error||payload;
   detail=[err.code,err.type,err.message].filter(Boolean).join(' / ')||detail;
  }catch{}
- detail=String(detail).replace(/\\s+/g,' ').replace(/\\b(?:sk|ek)[-_][A-Za-z0-9_-]{8,}\\b/gi,'[secret masque]').slice(0,300);
+ detail=String(detail).replace(/\s+/g,' ').replace(/\b(?:sk|ek)[-_][A-Za-z0-9_-]{8,}\b/gi,'[secret masque]').slice(0,300);
  console.error('OpenAI Realtime handshake failed',r.status,detail);
  throw new Error('OpenAI Realtime refuse la connexion ('+r.status+')'+(detail?': '+detail:''));
 }
