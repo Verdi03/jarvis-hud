@@ -1,37 +1,90 @@
 <!doctype html>
 <html lang="fr">
-<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#05090e"><title>JARVIS · Interface vocale</title><style>
-
-:root{color-scheme:dark;--cyan:#7cdef3;--ice:#d8f8ff;--bg:#05090e;--muted:#72808d}*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#eaf5f8;font-family:Manrope,'Segoe UI',sans-serif}body{min-height:100vh}.hud{height:100svh;min-height:500px;overflow:hidden;position:relative;background:radial-gradient(ellipse at 50% 49%,#10212d 0,#09121a 38%,#05090e 73%);--glow:#64d9f1}.topbar,.bottom{position:absolute;left:0;right:0;z-index:5;display:flex;align-items:center;justify-content:space-between;padding:0 clamp(20px,4vw,62px);font-size:9px;letter-spacing:.2em;color:#71808c}.topbar{top:0;height:70px;border-bottom:1px solid #c0f5ff0b}.wordmark{display:flex;gap:10px;align-items:center;color:#cdebf1;font-size:10px;font-weight:500;letter-spacing:.22em}.mark{width:25px;height:25px;border:1px solid #84dff180;border-radius:50%;display:grid;place-items:center;font-size:13px;color:#bff3ff;box-shadow:0 0 15px #69cee52a}.cloud,.local{display:flex;align-items:center;gap:9px}.cloud i,.local i,.state-led{width:5px;height:5px;border-radius:50%;background:#77d6a1;box-shadow:0 0 9px #77d6a1}.controls{display:flex;gap:16px}.controls button{font-size:18px;color:#92a0ab;background:transparent;border:0;cursor:pointer}.scene{position:absolute;inset:70px 0 60px;display:grid;place-items:center;isolation:isolate}.grid{position:absolute;inset:0;opacity:.17;background-image:linear-gradient(#7fcbe512 1px,transparent 1px),linear-gradient(90deg,#7fcbe512 1px,transparent 1px);background-size:72px 72px;mask-image:radial-gradient(ellipse,black 0,transparent 66%)}.scanline{position:absolute;inset:5% 0;background:linear-gradient(transparent 48%,#99eaff07 50%,transparent 52%);background-size:100% 9px;opacity:.35;pointer-events:none}.orbit{position:absolute;left:50%;top:46%;border-radius:50%;border:1px solid #85dff222;transform:translate(-50%,-50%);pointer-events:none}.orbit-one{width:min(37vw,390px);height:min(37vw,390px);border-left-color:#8de6f45e;border-right-color:#8de6f40c;animation:spin 36s linear infinite}.orbit-two{width:min(48vw,510px);height:min(48vw,510px);border-top-color:#8de6f440;border-bottom-color:#8de6f408;transform:translate(-50%,-50%) rotateX(67deg);animation:spin-rev 48s linear infinite}.orbit-three{width:min(57vw,620px);height:min(57vw,620px);border-style:dashed;border-color:#8de6f412;animation:spin 110s linear infinite}.core{position:absolute;left:50%;top:46%;transform:translate(-50%,-50%);width:clamp(118px,16vw,168px);height:clamp(118px,16vw,168px);border-radius:50%;border:1px solid #a5eff287;background:radial-gradient(circle at 48% 45%,#203e4b 0,#132a37 42%,#0b1721 72%,#08121a 100%);box-shadow:0 0 0 7px #8ee7f40a,0 0 0 15px #8ee7f407,inset 0 0 32px #64d9f148,0 0 45px #57d1ea35,0 0 100px #45bedb20;cursor:pointer;z-index:2;transition:transform .2s,box-shadow .4s}.core:hover{transform:translate(-50%,-50%) scale(1.025)}.core-shine{position:absolute;inset:12%;border-radius:50%;border:1px solid #c7f9ff75;transform:scaleY(.37) rotate(-27deg);box-shadow:0 0 22px #80dff647}.core-line{position:absolute;inset:12%;border-radius:50%;border:1px solid #8be7f566;transform:scaleY(.36) rotate(43deg)}.line-b{transform:scaleY(.36) rotate(-43deg);inset:10%}.line-c{transform:scaleY(.34) rotate(90deg);inset:14%;border-color:#9ff2fa4d}.core-heart{position:absolute;inset:37%;border-radius:50%;background:radial-gradient(circle at 38% 35%,white,#a7eff8 29%,#48b8d0 65%,#1c566b);box-shadow:0 0 18px #b4f6ff,0 0 44px #50d5ee9c;animation:heart 3.2s ease-in-out infinite}.visualizer{position:absolute;top:calc(46% + clamp(112px,15vw,164px));left:50%;transform:translateX(-50%);height:18px;display:flex;align-items:center;gap:4px;opacity:.38}.visualizer i{width:2px;height:3px;border-radius:2px;background:#9cecf8;box-shadow:0 0 7px #76d7e8;transition:height .12s}.voice-state{position:absolute;top:calc(46% + clamp(158px,20vw,210px));display:flex;align-items:center;gap:9px;font-size:9px;letter-spacing:.24em;color:#a7c0c8}.voice-hint{position:absolute;top:calc(46% + clamp(187px,23vw,243px));font-size:11px;font-weight:300;color:#697d89;letter-spacing:.035em}.ambient-caption{position:absolute;bottom:7%;font-size:10px;color:#8da1aa;letter-spacing:.16em;text-transform:uppercase;min-height:16px;transition:opacity .25s}.bottom{bottom:0;height:60px;border-top:1px solid #c0f5ff0b}.local b{font-size:8px;font-weight:400;color:#8d9ba4;letter-spacing:.1em}.toast{position:absolute;top:82px;left:50%;transform:translateX(-50%);border:1px solid #ffffff1e;background:#111b24dd;border-radius:20px;padding:10px 16px;color:#cbdbe0;font-size:11px;opacity:0;pointer-events:none;transition:opacity .2s;z-index:9}.toast.show{opacity:1}.stop{position:absolute;z-index:8;bottom:77px;left:50%;transform:translateX(-50%);border:1px solid #f38e8e50;background:#411e24;color:#ffc5c5;border-radius:18px;padding:9px 16px;font:9px Manrope;letter-spacing:.13em;cursor:pointer}[hidden]{display:none!important}#hud[data-state="listening"]{--glow:#8cecff}#hud[data-state="listening"] .core{box-shadow:0 0 0 9px #9defff12,0 0 0 21px #9defff08,inset 0 0 45px #64d9f177,0 0 55px #57d1ea72,0 0 135px #45bedb44;animation:listen 1.7s ease-in-out infinite}#hud[data-state="listening"] .state-led{background:#83e6f7;box-shadow:0 0 12px #83e6f7;animation:blink .8s infinite}#hud[data-state="thinking"] .core{animation:think 1.3s ease-in-out infinite}#hud[data-state="executing"] .orbit-one,#hud[data-state="executing"] .orbit-three{animation-duration:4s}#hud[data-state="speaking"] .core-heart{animation:heart .42s ease-in-out infinite}#hud[data-state="speaking"] .state-led{background:#8cecff;box-shadow:0 0 12px #8cecff}@keyframes spin{to{transform:translate(-50%,-50%) rotate(360deg)}}@keyframes spin-rev{to{transform:translate(-50%,-50%) rotateX(67deg) rotate(-360deg)}}@keyframes heart{50%{transform:scale(.82);filter:brightness(1.32)}}@keyframes listen{50%{transform:translate(-50%,-50%) scale(1.035)}}@keyframes think{50%{filter:hue-rotate(40deg) brightness(1.3)}}@keyframes blink{50%{opacity:.3}}@media(max-width:600px){.topbar{height:58px}.scene{inset:58px 0 52px}.bottom{height:52px;padding:0 15px;font-size:7px}.wordmark{font-size:9px}.cloud{font-size:7px;letter-spacing:.1em}.controls{gap:8px}.orbit-one{width:64vw;height:64vw}.orbit-two{width:78vw;height:78vw}.orbit-three{width:90vw;height:90vw}.voice-state{letter-spacing:.17em}.voice-hint{font-size:10px}.ambient-caption{bottom:6%;font-size:8px}}
-
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#05090e"><title>JARVIS · Realtime</title>
+<style>
+:root{color-scheme:dark;--cyan:#7cdef3;--bg:#05090e;--level:0}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;background:var(--bg);color:#eaf5f8;font-family:Segoe UI,Arial,sans-serif}
+.hud{height:100svh;min-height:500px;position:relative;overflow:hidden;background:radial-gradient(ellipse at 50% 48%,#10232f,#09121a 43%,#05090e 78%)}
+.top,.bottom{position:absolute;left:0;right:0;z-index:4;display:flex;align-items:center;justify-content:space-between;padding:0 5vw;color:#82939e;font-size:10px;letter-spacing:.2em}
+.top{height:68px;top:0;border-bottom:1px solid #b7f4ff12}.bottom{height:54px;bottom:0;border-top:1px solid #b7f4ff12}
+.brand{color:#d4f7ff;letter-spacing:.28em}.conn{display:flex;align-items:center;gap:8px}.led{width:6px;height:6px;border-radius:50%;background:#78828a}.hud[data-state="listening"] .led{background:#71d6a5;box-shadow:0 0 12px #71d6a5}
+.hud[data-state="speaking"] .led{background:#74dcf6;box-shadow:0 0 12px #74dcf6}
+.controls{display:flex;gap:12px}.controls button,.core,.stop{font:inherit;color:inherit;background:transparent;cursor:pointer}
+.controls button{border:1px solid #8fe8f333;border-radius:18px;padding:8px 12px;color:#a9ced8;font-size:9px;letter-spacing:.13em}
+.stage{position:absolute;inset:68px 0 54px;display:grid;place-items:center}
+.grid{position:absolute;inset:0;opacity:.12;background-image:linear-gradient(#7fcbe512 1px,transparent 1px),linear-gradient(90deg,#7fcbe512 1px,transparent 1px);background-size:70px 70px;mask-image:radial-gradient(ellipse,black,transparent 67%)}
+.orbit{position:absolute;left:50%;top:45%;width:min(52vw,520px);aspect-ratio:1;border:1px solid #79dff21b;border-radius:50%;transform:translate(-50%,-50%)}
+.orbit:before,.orbit:after{content:"";position:absolute;inset:10%;border:1px solid #8de6f426;border-radius:50%;transform:rotateX(67deg)}
+.orbit:after{inset:-9%;border-style:dashed;border-color:#8de6f414;transform:none}
+.core{position:absolute;left:50%;top:45%;width:clamp(128px,17vw,176px);aspect-ratio:1;border:1px solid #a5eff287;border-radius:50%;transform:translate(-50%,-50%) scale(calc(1 + var(--level)*.12));background:radial-gradient(circle at 50% 47%,#254d5d,#102532 66%,#09151d);box-shadow:0 0 0 12px #75dcf10a,inset 0 0 35px #64d9f14a,0 0 50px #57d1ea33,0 0 calc(85px + var(--level)*90px) #45bedb22;transition:box-shadow .1s,transform .08s;z-index:2}
+.core:after{content:"";position:absolute;inset:27%;border-radius:50%;background:radial-gradient(circle at 40% 35%,#fff,#9ceeff 38%,#37a9c5);box-shadow:0 0 28px #91efff;opacity:calc(.55 + var(--level)*.45)}
+.bars{position:absolute;top:calc(45% + 125px);height:24px;display:flex;align-items:center;gap:4px}
+.bars i{display:block;width:2px;height:calc(2px + var(--level)*38px);background:#9cecf8;border-radius:4px;box-shadow:0 0 7px #76d7e8;transition:height .08s}
+.state{position:absolute;top:calc(45% + 166px);font-size:10px;letter-spacing:.25em;color:#c5dce1}
+.hint{position:absolute;top:calc(45% + 195px);color:#738993;font-size:12px}
+.caption{position:absolute;bottom:8%;max-width:min(700px,82vw);text-align:center;color:#c9e1e7;font-size:14px;line-height:1.6}
+.stop{position:absolute;bottom:22px;right:5vw;border:1px solid #ef9c9c55;border-radius:20px;padding:8px 13px;color:#ffc2c2;font-size:9px;letter-spacing:.15em}
+.toast{position:absolute;z-index:8;top:82px;left:50%;transform:translateX(-50%);background:#14232ddd;border:1px solid #91e7f455;border-radius:20px;padding:10px 16px;color:#e8f7fa;font-size:12px}
+[hidden]{display:none!important}
+@media(max-width:600px){.top,.bottom{padding:0 16px;font-size:8px}.top{height:58px}.bottom{height:48px}.stage{inset:58px 0 48px}.controls{gap:5px}.controls button{padding:7px 8px;font-size:8px}.orbit{width:78vw}.core{width:142px}.caption{font-size:12px}}
 </style></head>
-<body><main class="hud" id="hud" data-state="idle">
-  <header class="topbar"><div class="wordmark"><span class="mark">J</span><span>J.A.R.V.I.S.</span></div><div class="cloud"><i></i> APERÇU · BASE44 NON RELIÉ</div><div class="controls"><button id="fullscreen" aria-label="Plein écran" title="Plein écran">⛶</button><button id="audio-toggle" aria-label="Couper la voix" title="Couper la voix">◖</button></div></header>
-  <div class="scene"><div class="grid"></div><div class="scanline"></div>
-    <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="orbit orbit-three"></div>
-    <button class="core" id="core" aria-label="Appuyer pour parler à Jarvis"><span class="core-shine"></span><span class="core-heart"></span><span class="core-line line-a"></span><span class="core-line line-b"></span><span class="core-line line-c"></span></button>
-    <div class="visualizer" id="visualizer"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
-    <div class="voice-state"><span class="state-led"></span><span id="state-label">EN VEILLE</span></div>
-    <div class="voice-hint" id="hint">Appuyez sur le noyau et parlez</div>
-    <div class="ambient-caption" id="caption" aria-live="polite"></div>
-  </div>
-  <footer class="bottom"><span>HUD VOCAL · RÉPONSES SIMULÉES</span><span class="local"><i></i> MODE <b id="local-status">APERÇU</b></span><span id="clock"></span></footer>
-  <div class="toast" id="toast" role="status"></div><button class="stop" id="stop" hidden>ARRÊTER</button>
-</main><script>
-(() => {
-  const hud=document.querySelector('#hud'), core=document.querySelector('#core'), label=document.querySelector('#state-label'), hint=document.querySelector('#hint'), caption=document.querySelector('#caption'), bars=[...document.querySelectorAll('.visualizer i')];
-  let recognition=null, muted=false, timer=null, anim=null;
-  const say=(text)=>{if(muted||!('speechSynthesis'in window)){setState('idle','EN VEILLE','Appuyez sur le noyau et parlez');return} speechSynthesis.cancel(); const u=new SpeechSynthesisUtterance(text);u.lang='fr-FR';u.rate=.96;u.onstart=()=>{setState('speaking','JE VOUS RÉPONDS','');document.querySelector('#stop').hidden=false};u.onend=()=>{document.querySelector('#stop').hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez')};speechSynthesis.speak(u)};
-  function setState(name,title,sub){hud.dataset.state=name;label.textContent=title;hint.textContent=sub;}
-  function notify(text){const t=document.querySelector('#toast');t.textContent=text;t.classList.add('show');clearTimeout(timer);timer=setTimeout(()=>t.classList.remove('show'),2800)}
-  function waveform(on){cancelAnimationFrame(anim);if(!on){bars.forEach(b=>b.style.height='3px');return}const tick=()=>{bars.forEach((b,i)=>b.style.height=`${3+Math.random()*12}px`);anim=requestAnimationFrame(()=>setTimeout(tick,110))};tick()}
-  function demoReply(text){const t=text.toLowerCase();if(/ouvre|lance|application|fenêtre|fenetre|pc/.test(t)){return 'Je pourrais ouvrir cette application sur votre ordinateur. Dans cette maquette, le contrôle local n’est pas encore connecté.'}if(/mail|email|agenda|calend|linkedin|résum|resume|rapport/.test(t)){return 'Je vous ai compris. Dans le Jarvis final, je consulterai le bon service puis je vous répondrai à voix haute. Cette maquette n’est reliée à aucune application.'}return 'Je vous ai entendu. Cette maquette illustre la voix et les états du HUD ; elle n’est pas encore reliée à votre Superagent Base44.'}
-  function listen(){if(recognition){recognition.stop();return}const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR){notify('La reconnaissance vocale n’est pas disponible dans ce navigateur.');return}recognition=new SR();recognition.lang='fr-FR';recognition.continuous=false;recognition.interimResults=false;recognition.onstart=()=>{setState('listening','JE VOUS ÉCOUTE','Parlez, puis attendez ma réponse');waveform(true)};recognition.onerror=()=>{setState('error','MICRO INDISPONIBLE','Vérifiez l’autorisation du navigateur');waveform(false);setTimeout(()=>setState('idle','EN VEILLE','Appuyez sur le noyau et parlez'),2200)};recognition.onend=()=>{recognition=null;waveform(false)};recognition.onresult=(e)=>{const spoken=e.results?.[0]?.[0]?.transcript||'';setState('thinking','JE RÉFLÉCHIS','');caption.textContent='';setTimeout(()=>{setState('executing','JE PRÉPARE LA RÉPONSE','');setTimeout(()=>say(demoReply(spoken)),500)},600)};try{recognition.start()}catch{recognition=null;notify('Impossible de démarrer le micro.')}}
-  core.addEventListener('click',listen);
-  document.querySelector('#fullscreen').addEventListener('click',async()=>{try{document.fullscreenElement?await document.exitFullscreen():await document.documentElement.requestFullscreen()}catch{notify('Plein écran indisponible')}});
-  document.querySelector('#audio-toggle').addEventListener('click',()=>{muted=!muted;document.querySelector('#audio-toggle').textContent=muted?'◌':'◖';document.querySelector('#audio-toggle').title=muted?'Activer la voix':'Couper la voix';if(muted&&'speechSynthesis'in window)speechSynthesis.cancel()});
-  document.querySelector('#stop').addEventListener('click',()=>{if('speechSynthesis'in window)speechSynthesis.cancel();document.querySelector('#stop').hidden=true;setState('idle','EN VEILLE','Appuyez sur le noyau et parlez')});
-  setInterval(()=>{document.querySelector('#clock').textContent=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit'}).format(new Date())},1000);
+<body>
+<main class="hud" id="hud" data-state="idle">
+<header class="top"><div class="brand">J.A.R.V.I.S.</div><div class="conn"><i class="led"></i><span id="connection">LOCAL · PRÊT</span></div><div class="controls"><button id="start">DÉMARRER</button><button id="mute" hidden>COUPER MICRO</button></div></header>
+<section class="stage"><div class="grid"></div><div class="orbit"></div>
+<button class="core" id="core" aria-label="Démarrer ou arrêter la conversation vocale"></button>
+<div class="bars" id="bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+<div class="state" id="state">EN VEILLE</div><div class="hint" id="hint">Appuie sur DÉMARRER et parle naturellement</div>
+<div class="caption" id="caption" aria-live="polite"></div></section>
+<footer class="bottom"><span>VOIX TEMPS RÉEL · WEBRTC</span><span id="clock"></span><button class="stop" id="stop" hidden>ARRÊTER</button></footer><div class="toast" id="toast" hidden></div>
+<audio id="remote" autoplay></audio>
+</main>
+<script>
+(function(){
+const hud=document.getElementById('hud'), state=document.getElementById('state'), hint=document.getElementById('hint'), caption=document.getElementById('caption'), connection=document.getElementById('connection');
+const core=document.getElementById('core'), start=document.getElementById('start'), stop=document.getElementById('stop'), mute=document.getElementById('mute'), remote=document.getElementById('remote'), bars=[...document.querySelectorAll('.bars i')];
+let pc=null, dc=null, mic=null, muted=false, meterCtx=null, micAnalyser=null, outAnalyser=null, frame=0, toastTimer=0;
+function setState(s,t,h){hud.dataset.state=s;state.textContent=t;hint.textContent=h||''}
+function toast(s){const el=document.getElementById('toast');el.textContent=s;el.hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.hidden=true,3500)}
+function analyzer(stream){const ctx=new AudioContext(), source=ctx.createMediaStreamSource(stream), node=ctx.createAnalyser();node.fftSize=256;source.connect(node);return {ctx,node}}
+function measure(a){if(!a)return 0;const data=new Uint8Array(a.node.fftSize);a.node.getByteTimeDomainData(data);let sum=0;for(const v of data){const n=(v-128)/128;sum+=n*n}return Math.min(1,Math.sqrt(sum/data.length)*5)}
+function draw(){const level=Math.max(measure(micAnalyser),measure(outAnalyser));hud.style.setProperty('--level',String(level));bars.forEach((b,i)=>{const spread=Math.abs(i-(bars.length-1)/2)/(bars.length/2);b.style.height=(2+level*34*(1-spread*.65))+'px'});frame=requestAnimationFrame(draw)}
+function cleanup(){cancelAnimationFrame(frame);if(dc)dc.close();if(pc)pc.close();if(mic)mic.getTracks().forEach(t=>t.stop());if(meterCtx)meterCtx.close();pc=dc=mic=meterCtx=micAnalyser=outAnalyser=null;remote.srcObject=null;start.hidden=false;mute.hidden=true;stop.hidden=true;connection.textContent='LOCAL · PRÊT';caption.textContent='';hud.style.setProperty('--level','0');bars.forEach(b=>b.style.height='2px');setState('idle','EN VEILLE','Appuie sur DÉMARRER et parle naturellement')}
+async function connect(){
+if(pc)return;
+try{
+setState('connecting','CONNEXION','Autorise le microphone pour commencer');
+connection.textContent='CONNEXION…';
+mic=await navigator.mediaDevices.getUserMedia({audio:{echoCancellation:true,noiseSuppression:true,autoGainControl:true}});
+micAnalyser=analyzer(mic);
+const tokenResp=await fetch('/api/realtime/session',{method:'POST'});
+const tokenData=await tokenResp.json();if(!tokenResp.ok)throw new Error(tokenData.error||'Session refusée');
+pc=new RTCPeerConnection();mic.getTracks().forEach(t=>pc.addTrack(t,mic));
+pc.ontrack=async e=>{remote.srcObject=e.streams[0];try{await remote.play()}catch{};outAnalyser=analyzer(e.streams[0])};
+pc.onconnectionstatechange=()=>{if(pc&&['failed','disconnected','closed'].includes(pc.connectionState)){connection.textContent='HORS LIGNE';if(pc.connectionState==='failed')toast('Connexion interrompue. Arrête puis reconnecte JARVIS.')}};
+dc=pc.createDataChannel('oai-events');
+dc.onopen=()=>{connection.textContent='REALTIME · CONNECTÉ';start.hidden=true;mute.hidden=false;stop.hidden=false;setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse');draw()};
+dc.onmessage=e=>{let x;try{x=JSON.parse(e.data)}catch{return}
+if(x.type==='input_audio_buffer.speech_started')setState('listening','JE VOUS ÉCOUTE','');
+if(x.type==='input_audio_buffer.speech_stopped')setState('thinking','JE RÉFLÉCHIS','');
+if(x.type==='response.created')setState('thinking','JE PRÉPARE LA RÉPONSE','');
+if(x.type==='response.output_audio.delta')setState('speaking','JARVIS PARLE','Tu peux m’interrompre en parlant');
+if(x.type==='response.output_audio_transcript.delta'){caption.textContent+=x.delta||''}
+if(x.type==='conversation.item.input_audio_transcription.completed'&&x.transcript){caption.textContent='Vous : '+x.transcript}
+if(x.type==='response.done')setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse');
+if(x.type==='error'){toast(x.error&&x.error.message?x.error.message:'Erreur Realtime');setState('error','ERREUR','Arrête et reconnecte JARVIS')}
+};
+const offer=await pc.createOffer();await pc.setLocalDescription(offer);
+const r=await fetch('https://api.openai.com/v1/realtime/calls',{method:'POST',headers:{Authorization:'Bearer '+tokenData.value,'Content-Type':'application/sdp'},body:offer.sdp});
+if(!r.ok)throw new Error('OpenAI Realtime refuse la connexion ('+r.status+'). Vérifie modèle, API et quota.');
+await pc.setRemoteDescription({type:'answer',sdp:await r.text()});
+setState('connecting','OUVERTURE AUDIO','Connexion sécurisée en cours');
+}catch(e){toast(e.message||'Impossible de connecter le microphone');cleanup()}
+}
+start.addEventListener('click',connect);core.addEventListener('click',()=>pc?cleanup():connect());stop.addEventListener('click',cleanup);
+mute.addEventListener('click',()=>{muted=!muted;if(mic)mic.getAudioTracks().forEach(t=>t.enabled=!muted);mute.textContent=muted?'RÉACTIVER MICRO':'COUPER MICRO';setState(muted?'idle':'listening',muted?'MICRO COUPÉ':'JARVIS À L’ÉCOUTE',muted?'Réactive le micro pour continuer':'Parle naturellement')});
+document.getElementById('clock').textContent=new Intl.DateTimeFormat('fr-FR',{hour:'2-digit',minute:'2-digit'}).format(new Date());
 })();
-
 </script></body></html>
