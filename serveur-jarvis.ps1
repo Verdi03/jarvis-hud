@@ -140,8 +140,35 @@ while ($Listener.IsListening) {
         $session = Invoke-RestMethod -Uri "https://api.openai.com/v1/realtime/client_secrets" -Method Post -Headers @{Authorization="Bearer $OpenAiKey"} -ContentType "application/json" -Body $body -TimeoutSec 30
         Send-Json $Response @{value=$session.value; expires_at=$session.expires_at}
       } catch {
-        Write-Warning "OpenAI Realtime session creation failed."
-        Send-Json $Response @{error="Impossible de créer la session Realtime. Vérifie l'accès API et le quota."} 502
+        $apiStatus = 0
+        $apiErrorCode = ""
+        $apiErrorMessage = ""
+        try {
+          $apiResponse = $_.Exception.Response
+          if ($apiResponse) {
+            $apiStatus = [int]$apiResponse.StatusCode
+            $apiStream = $apiResponse.GetResponseStream()
+            if ($apiStream) {
+              $apiReader = [System.IO.StreamReader]::new($apiStream)
+              $apiRaw = $apiReader.ReadToEnd()
+              $apiReader.Close()
+              if ($apiRaw) {
+                $apiError = $apiRaw | ConvertFrom-Json
+                if ($apiError.error) {
+                  $apiErrorCode = [string]$apiError.error.code
+                  $apiErrorMessage = [string]$apiError.error.message
+                }
+              }
+            }
+          }
+        } catch {}
+        if ($apiErrorMessage.Length -gt 300) { $apiErrorMessage = $apiErrorMessage.Substring(0, 300) }
+        $apiErrorMessage = $apiErrorMessage -replace 'sk-[A-Za-z0-9_-]+', '[clé masquée]'
+        $diagnostic = "HTTP $apiStatus"
+        if ($apiErrorCode) { $diagnostic += " / $apiErrorCode" }
+        if ($apiErrorMessage) { $diagnostic += " — $apiErrorMessage" }
+        Write-Warning "OpenAI Realtime refusée : $diagnostic"
+        Send-Json $Response @{error="OpenAI Realtime refusée : $diagnostic"} 502
       }
       continue
     }
