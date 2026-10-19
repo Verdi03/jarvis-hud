@@ -66,6 +66,28 @@ pc.ontrack=async e=>{remote.srcObject=e.streams[0];try{await remote.play()}catch
 pc.onconnectionstatechange=()=>{if(pc&&['failed','disconnected','closed'].includes(pc.connectionState)){connection.textContent='HORS LIGNE';if(pc.connectionState==='failed')toast('Connexion interrompue. Arrête puis reconnecte JARVIS.')}};
 dc=pc.createDataChannel('oai-events');
 dc.onopen=()=>{connection.textContent='REALTIME · CONNECTÉ';start.hidden=true;mute.hidden=false;stop.hidden=false;setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse');draw()};
+const completedToolCalls=new Set();
+async function returnToolCalls(items){
+  const pending=items.filter(i=>i&&i.type==='function_call'&&i.call_id&&i.name==='jarvis_test_mcp_readonly'&&!completedToolCalls.has(i.call_id));
+  if(!pending.length)return false;
+  setState('thinking','TEST MCP EN COURS','Appel fictif en lecture seule…');
+  for(const item of pending){
+    completedToolCalls.add(item.call_id);
+    let output;
+    try{
+      const args=JSON.parse(item.arguments||'{}');
+      const response=await fetch('/api/mcp/tool',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({name:item.name,arguments:args})});
+      const data=await response.json();
+      output=JSON.stringify(response.ok?data:{ok:false,error:data.error||'Test MCP indisponible.'});
+    }catch{
+      output=JSON.stringify({ok:false,error:'Test MCP échoué. Aucun contenu de compte n’a été transmis.'});
+    }
+    if(output.length>2000)output=output.slice(0,2000);
+    if(dc&&dc.readyState==='open')dc.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output}}));
+  }
+  if(dc&&dc.readyState==='open')dc.send(JSON.stringify({type:'response.create'}));
+  return true;
+}
 dc.onmessage=e=>{let x;try{x=JSON.parse(e.data)}catch{return}
 if(x.type==='input_audio_buffer.speech_started')setState('listening','JE VOUS ÉCOUTE','');
 if(x.type==='input_audio_buffer.speech_stopped')setState('thinking','JE RÉFLÉCHIS','');
@@ -73,7 +95,7 @@ if(x.type==='response.created')setState('thinking','JE PRÉPARE LA RÉPONSE','')
 if(x.type==='response.output_audio.delta')setState('speaking','JARVIS PARLE','Tu peux m’interrompre en parlant');
 if(x.type==='response.output_audio_transcript.delta'){caption.textContent+=x.delta||''}
 if(x.type==='conversation.item.input_audio_transcription.completed'&&x.transcript){caption.textContent='Vous : '+x.transcript}
-if(x.type==='response.done')setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse');
+if(x.type==='response.done'){const calls=(x.response&&Array.isArray(x.response.output))?x.response.output.filter(i=>i.type==='function_call'):[];if(calls.length){void returnToolCalls(calls)}else setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse')}
 if(x.type==='error'){toast(x.error&&x.error.message?x.error.message:'Erreur Realtime');setState('error','ERREUR','Arrête et reconnecte JARVIS')}
 };
 const offer=await pc.createOffer();await pc.setLocalDescription(offer);
