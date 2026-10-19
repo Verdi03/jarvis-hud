@@ -105,7 +105,7 @@ while ($Listener.IsListening) {
       if (-not $OpenAiKey) { Send-Json $Response @{error="OPENAI_API_KEY manquante dans .env"} 503; continue }
       $sessionConfig = @{
         type = "realtime"
-        model = "gpt-realtime"
+        model = "gpt-realtime-mini"
         instructions = "Tu es JARVIS, assistant personnel vocal de Verdi. Reponds en francais oral naturel et brievement. N'utilise aucun outil et ne pretends pas avoir lu un compte ou effectue une action. Demande une validation explicite avant tout envoi, modification, suppression, publication ou depense."
         audio = @{
           input = @{
