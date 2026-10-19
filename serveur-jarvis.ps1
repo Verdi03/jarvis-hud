@@ -106,7 +106,7 @@ while ($Listener.IsListening) {
       $sessionConfig = @{
         type = "realtime"
         model = "gpt-realtime"
-        instructions = "Tu es JARVIS, assistant vocal de Verdi. Reponds en francais oral naturel et brievement. Tu as un seul outil de test fictif. Appelle-le uniquement si Verdi demande explicitement le test MCP fictif, avec le code JARVIS-MCP-TEST-20261019. Aucune donnee personnelle, action d'ecriture, envoi ou suppression."
+        instructions = "Tu es JARVIS, assistant personnel vocal de Verdi. Reponds en francais oral naturel et brievement. N'utilise aucun outil et ne pretends pas avoir lu un compte ou effectue une action. Demande une validation explicite avant tout envoi, modification, suppression, publication ou depense."
         audio = @{
           input = @{
             transcription = @{model="gpt-4o-mini-transcribe"; language="fr"}
@@ -116,22 +116,6 @@ while ($Listener.IsListening) {
           output = @{voice="marin"}
         }
       }
-      $sessionConfig.tools = @(
-        @{
-          type = "function"
-          name = "jarvis_test_mcp_readonly"
-          description = "Execute uniquement le test fictif MCP Gmail autorise. N'utilise aucune requete reelle."
-          parameters = @{
-            type = "object"
-            properties = @{
-              test_code = @{ type = "string"; enum = @("JARVIS-MCP-TEST-20261019") }
-            }
-            required = @("test_code")
-            additionalProperties = $false
-          }
-        }
-      )
-      $sessionConfig.tool_choice = "auto"
       $body = @{
         expires_after = @{anchor="created_at"; seconds=600}
         session = $sessionConfig
