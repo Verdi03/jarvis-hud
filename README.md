@@ -6,9 +6,8 @@ Cette branche remplace la démo à réponses simulées par une première connexi
 
 1. Copier .env.example vers .env.
 2. Ajouter sa clé OpenAI API à OPENAI_API_KEY dans .env. Ne jamais committer ce fichier ni partager la clé.
-3. Ouvrir PowerShell dans ce dossier et lancer :
-   powershell -ExecutionPolicy Bypass -File .\serveur-jarvis.ps1
-4. Ouvrir http://127.0.0.1:4173 dans Chrome ou Edge, puis cliquer DÉMARRER et autoriser le microphone.
+3. Double-cliquer sur `lancer-jarvis.cmd`. Au premier démarrage, complète `.env` dans le Bloc-notes, enregistre et relance le fichier.
+4. Le HUD s'ouvre sur http://127.0.0.1:4173 dans Chrome ou Edge. Clique sur DÉMARRER et autorise le microphone.
 
 La passerelle n'écoute que sur 127.0.0.1 et ne sert que index.html. La clé permanente reste dans le processus PowerShell ; le navigateur reçoit uniquement un secret Realtime temporaire.
 
