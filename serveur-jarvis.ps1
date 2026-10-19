@@ -47,7 +47,8 @@ function Invoke-McpRpc([string]$Method, $Params, [string]$SessionId = $null, [in
   $headers = @{ Accept = "application/json, text/event-stream"; "MCP-Protocol-Version" = "2025-03-26" }
   $headers[$N8nAuthHeader] = $N8nAuthValue
   if ($SessionId) { $headers["Mcp-Session-Id"] = $SessionId }
-  $payload = @{ jsonrpc = "2.0"; id = $Id; method = $Method }
+  $payload = @{ jsonrpc = "2.0"; method = $Method }
+  if ($Method -ne "notifications/initialized") { $payload.id = $Id }
   if ($null -ne $Params) { $payload.params = $Params }
   $body = $payload | ConvertTo-Json -Depth 20 -Compress
   $response = Invoke-WebRequest -UseBasicParsing -Uri $N8nMcpUrl -Method Post -Headers $headers -ContentType "application/json" -Body $body -TimeoutSec 30
@@ -61,25 +62,17 @@ function Invoke-McpRpc([string]$Method, $Params, [string]$SessionId = $null, [in
   return @{ payload = $parsed; sessionId = [string]$response.Headers["Mcp-Session-Id"] }
 }
 function Invoke-JarvisMcpTool($InputObject) {
-  $name = [string]$InputObject.name
-  $args = $InputObject.arguments
-  $allowed = @("jarvis_readonly_jarvis_search_gmail", "jarvis_readonly_jarvis_list_calendar_events", "jarvis_readonly_jarvis_search_drive")
-  if ($name -notin $allowed) { throw "Outil non autorisé." }
-  if ($null -eq $args) { $args = @{} }
-  if ($name -eq "jarvis_readonly_jarvis_search_gmail" -and (-not $args.query -or $args.query.Length -gt 200)) { throw "Requête Gmail invalide." }
-  if ($name -eq "jarvis_readonly_jarvis_search_drive" -and (-not $args.name_query -or $args.name_query.Length -gt 100)) { throw "Recherche Drive invalide." }
-  if ($name -eq "jarvis_readonly_jarvis_list_calendar_events") {
-    $start = [DateTimeOffset]::Parse([string]$args.start_time)
-    $end = [DateTimeOffset]::Parse([string]$args.end_time)
-    if ($end -le $start -or ($end - $start).TotalDays -gt 31) { throw "Période Agenda invalide (maximum 31 jours)." }
-  }
+  if ([string]$InputObject.name -ne "jarvis_test_mcp_readonly") { throw "Outil non autorisé." }
+  if ([string]$InputObject.arguments.test_code -ne "JARVIS-MCP-TEST-20261019") { throw "Code de test invalide." }
+  $query = 'subject:"JARVIS_FAUX_TEST_NE_DOIT_PAS_EXISTer_20261019"'
   $init = Invoke-McpRpc "initialize" @{ protocolVersion = "2025-03-26"; capabilities = @{}; clientInfo = @{ name = "jarvis-local-hud"; version = "0.1.0" } } $null 1
   if ($init.payload.error) { throw "Initialisation MCP refusée." }
   $sid = $init.sessionId
   $null = Invoke-McpRpc "notifications/initialized" $null $sid 0
-  $call = Invoke-McpRpc "tools/call" @{ name = $name; arguments = $args } $sid 2
-  if ($call.payload.error) { throw "Appel MCP refusé." }
-  return $call.payload.result
+  $call = Invoke-McpRpc "tools/call" @{ name = "jarvis_readonly_jarvis_search_gmail"; arguments = @{ query = $query } } $sid 2
+  if ($call.payload.error -or $call.payload.result.isError) { throw "Appel MCP fictif refusé." }
+  # Return only a fixed receipt; never pass Gmail content to the Realtime model.
+  return @{ status = "completed"; test = "fictitious_read_only_call"; result_content_forwarded = $false }
 }
 
 while ($Listener.IsListening) {
@@ -102,11 +95,9 @@ while ($Listener.IsListening) {
       $sessionConfig = @{
         type = "realtime"
         model = "gpt-realtime"
-        instructions = "Tu es JARVIS, assistant vocal de Verdi. Réponds en français oral naturel et bref. Tu as trois outils Google strictement en lecture seule. Utilise-les seulement quand la demande nécessite ces données et annonce clairement le résultat retourné. Pour le test fictif demandé, recherche uniquement le sujet JARVIS_FAUX_TEST_NE_DOIT_PAS_EXISTer_20261019. N'envoie, ne modifie et ne supprime rien. N'invente jamais un résultat. Demande une approbation avant toute action d'écriture ou dépense."
+        instructions = "Tu es JARVIS, assistant vocal de Verdi. Réponds en français oral naturel et bref. Tu as un seul outil MCP de test fictif. Appelle-le seulement si Verdi demande le test. Le serveur fait une recherche Gmail fixe de test et ne renvoie au modèle aucun contenu de compte, seulement un reçu de succès ou d'échec. Aucune donnée personnelle, action d'écriture, envoi ou suppression."
         tools = @(
-          @{ type = "function"; name = "jarvis_readonly_jarvis_search_gmail"; description = "Recherche en lecture seule dans Gmail. Pour le test fictif, utilise exactement le sujet JARVIS_FAUX_TEST_NE_DOIT_PAS_EXISTer_20261019."; parameters = @{ type = "object"; properties = @{ query = @{ type = "string"; description = "Requête Gmail. Limite serveur : 10 résultats." } }; required = @("query"); additionalProperties = $false } },
-          @{ type = "function"; name = "jarvis_readonly_jarvis_list_calendar_events"; description = "Liste en lecture seule les événements Calendar dans la période fournie (31 jours maximum)."; parameters = @{ type = "object"; properties = @{ start_time = @{ type = "string"; description = "Date ISO 8601 de début." }; end_time = @{ type = "string"; description = "Date ISO 8601 de fin, 31 jours maximum." } }; required = @("start_time","end_time"); additionalProperties = $false } },
-          @{ type = "function"; name = "jarvis_readonly_jarvis_search_drive"; description = "Recherche en lecture seule des noms de fichiers Drive, sans ouvrir leur contenu."; parameters = @{ type = "object"; properties = @{ name_query = @{ type = "string"; description = "Nom ou fragment du nom du fichier." } }; required = @("name_query"); additionalProperties = $false } }
+          @{ type = "function"; name = "jarvis_test_mcp_readonly"; description = "Exécute uniquement le test fictif MCP Gmail autorisé. N'utilise aucun compte ou requête réelle."; parameters = @{ type = "object"; properties = @{ test_code = @{ type = "string"; enum = @("JARVIS-MCP-TEST-20261019") } }; required = @("test_code"); additionalProperties = $false } }
         )
         tool_choice = "auto"
         audio = @{
