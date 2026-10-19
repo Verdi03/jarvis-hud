@@ -1,21 +1,27 @@
-# JARVIS HUD
+# JARVIS HUD — voix Realtime locale
 
-Interface vocale de démonstration, prévue pour être intégrée à Base44.
+Cette branche remplace la démo à réponses simulées par une première connexion vocale Realtime depuis Windows.
 
-## État de cette version
+## Lancer sur Windows, sans Node.js
 
-- Le noyau animé et l'interface sont présents.
-- Le navigateur peut demander l'accès au micro et reconnaître une phrase en français.
-- La réponse est simulée dans le navigateur et lue avec la synthèse vocale disponible.
-- **Aucun échange n'est envoyé au Superagent Base44.**
-- Aucun jeton, mot de passe ou secret n'est inclus dans le dépôt.
+1. Copier .env.example vers .env.
+2. Ajouter sa clé OpenAI API à OPENAI_API_KEY dans .env. Ne jamais committer ce fichier ni partager la clé.
+3. Ouvrir PowerShell dans ce dossier et lancer :
+   powershell -ExecutionPolicy Bypass -File .\serveur-jarvis.ps1
+4. Ouvrir http://127.0.0.1:4173 dans Chrome ou Edge, puis cliquer DÉMARRER et autoriser le microphone.
 
-## Aperçu
+La passerelle n'écoute que sur 127.0.0.1 et ne sert que index.html. La clé permanente reste dans le processus PowerShell ; le navigateur reçoit uniquement un secret Realtime temporaire.
 
-Ouvrir `index.html` dans Chrome ou Edge, autoriser le micro, puis cliquer sur le noyau et parler. La synthèse vocale dépend des voix installées dans le navigateur.
+## Ce qui est dans cette branche
 
-## Étape d'intégration à faire dans Base44
+- HUD sombre/cyan avec une seule interaction vocale.
+- Audio bidirectionnel WebRTC, détection de parole, interruption, transcription et contrôle du micro.
+- Animation pilotée par le son réel du micro ou de la réponse, arrêt au silence.
+- Petit serveur Windows PowerShell, sans Node.js ni paquet externe.
+- Aucune réponse de démonstration, aucun appel au Superagent Base44.
 
-Le HUD devra appeler une fonction serveur Base44 qui transmet la demande au Superagent existant. Le jeton du Superagent devra être enregistré uniquement dans les secrets serveur de Base44, jamais dans ce dépôt ni dans le navigateur. Le site ne devra afficher « connecté » qu'après un test réel réussi.
+## Ce qui n'est pas encore intégré
 
-Cette version ne contient pas encore cette fonction serveur. Elle ne doit donc pas être considérée comme un JARVIS opérationnel.
+Cette première étape est la conversation vocale uniquement. Elle ne lit pas encore Gmail, Drive ou Calendar, ne crée pas de tâche, n'appelle pas n8n, ne déclenche pas d'agent Meta et ne se connecte pas à Telegram. Les outils, le brief, la mémoire partagée et les validations sont décrits dans le plan privé fourni séparément ; ils devront être ajoutés avant de présenter Jarvis comme entièrement opérationnel.
+
+L'API OpenAI est facturée à l'usage séparément de ChatGPT/Codex. Utilise un budget et des alertes sur OpenAI Platform. Ce code n'a pas été testé physiquement sur Windows avec une clé API réelle.
