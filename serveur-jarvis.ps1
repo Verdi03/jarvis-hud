@@ -31,13 +31,13 @@ if (Test-Path -LiteralPath $EnvPath -PathType Leaf) {
 $Listener = [System.Net.HttpListener]::new()
 $Listener.Prefixes.Add("http://127.0.0.1:$Port/")
 try { $Listener.Start() } catch {
-  Write-Host "Le port 4173 est déjà utilisé. Ferme l'autre serveur JARVIS." -ForegroundColor Yellow
-  Read-Host "Entrée pour fermer"
+  Write-Host "Le port 4173 est deja utilise. Ferme l'autre serveur JARVIS." -ForegroundColor Yellow
+  Read-Host "Entree pour fermer"
   exit 1
 }
 Write-Host "JARVIS disponible sur http://127.0.0.1:$Port/"
-Write-Host "Clé OpenAI détectée : $([bool]$OpenAiKey). La clé permanente reste côté serveur."
-Write-Host "Ctrl+C arrête JARVIS."
+Write-Host "Cle OpenAI detectee : $([bool]$OpenAiKey). La cle permanente reste cote serveur."
+Write-Host "Ctrl+C arrete JARVIS."
 
 function Send-Bytes($Response, [byte[]]$Bytes, [string]$Type, [int]$Status = 200) {
   $Response.StatusCode = $Status
@@ -72,15 +72,15 @@ function Invoke-McpRpc([string]$Method, $Params, [string]$SessionId = $null, [in
   return @{ payload = $parsed; sessionId = [string]$response.Headers["Mcp-Session-Id"] }
 }
 function Invoke-JarvisMcpTool($InputObject) {
-  if ([string]$InputObject.name -ne "jarvis_test_mcp_readonly") { throw "Outil non autorisé." }
+  if ([string]$InputObject.name -ne "jarvis_test_mcp_readonly") { throw "Outil non autorise." }
   if ([string]$InputObject.arguments.test_code -ne "JARVIS-MCP-TEST-20261019") { throw "Code de test invalide." }
   $query = 'subject:"JARVIS_FAUX_TEST_NE_DOIT_PAS_EXISTer_20261019"'
   $init = Invoke-McpRpc "initialize" @{ protocolVersion = "2025-03-26"; capabilities = @{}; clientInfo = @{ name = "jarvis-local-hud"; version = "0.1.0" } } $null 1
-  if ($init.payload.error) { throw "Initialisation MCP refusée." }
+  if ($init.payload.error) { throw "Initialisation MCP refusee." }
   $sid = $init.sessionId
   $null = Invoke-McpRpc "notifications/initialized" $null $sid 0
   $call = Invoke-McpRpc "tools/call" @{ name = "jarvis_readonly_jarvis_search_gmail"; arguments = @{ query = $query } } $sid 2
-  if ($call.payload.error -or $call.payload.result.isError) { throw "Appel MCP fictif refusé." }
+  if ($call.payload.error -or $call.payload.result.isError) { throw "Appel MCP fictif refuse." }
   # Return only a fixed receipt; never pass Gmail content to the Realtime model.
   return @{ status = "completed"; test = "fictitious_read_only_call"; result_content_forwarded = $false }
 }
@@ -99,14 +99,14 @@ while ($Listener.IsListening) {
     if ($Request.HttpMethod -eq "POST" -and $Path -eq "/api/realtime/session") {
       $origin = $Request.Headers["Origin"]
       if ($origin -and $origin -ne "http://127.0.0.1:$Port") {
-        Send-Json $Response @{error="Origine refusée"} 403
+        Send-Json $Response @{error="Origine refusee"} 403
         continue
       }
       if (-not $OpenAiKey) { Send-Json $Response @{error="OPENAI_API_KEY manquante dans .env"} 503; continue }
       $sessionConfig = @{
         type = "realtime"
         model = "gpt-realtime"
-        instructions = "Tu es JARVIS, assistant vocal de Verdi. Réponds en français oral naturel et brièvement. Tu as un seul outil de test fictif. Appelle-le uniquement si Verdi demande explicitement le test MCP fictif, avec le code JARVIS-MCP-TEST-20261019. Aucune donnée personnelle, action d'écriture, envoi ou suppression."
+        instructions = "Tu es JARVIS, assistant vocal de Verdi. Reponds en francais oral naturel et brievement. Tu as un seul outil de test fictif. Appelle-le uniquement si Verdi demande explicitement le test MCP fictif, avec le code JARVIS-MCP-TEST-20261019. Aucune donnee personnelle, action d'ecriture, envoi ou suppression."
         audio = @{
           input = @{
             transcription = @{model="gpt-4o-mini-transcribe"; language="fr"}
@@ -120,7 +120,7 @@ while ($Listener.IsListening) {
         @{
           type = "function"
           name = "jarvis_test_mcp_readonly"
-          description = "Exécute uniquement le test fictif MCP Gmail autorisé. N'utilise aucune requête réelle."
+          description = "Execute uniquement le test fictif MCP Gmail autorise. N'utilise aucune requete reelle."
           parameters = @{
             type = "object"
             properties = @{
@@ -163,18 +163,18 @@ while ($Listener.IsListening) {
           }
         } catch {}
         if ($apiErrorMessage.Length -gt 300) { $apiErrorMessage = $apiErrorMessage.Substring(0, 300) }
-        $apiErrorMessage = $apiErrorMessage -replace 'sk-[A-Za-z0-9_-]+', '[clé masquée]'
+        $apiErrorMessage = $apiErrorMessage -replace 'sk-[A-Za-z0-9_-]+', '[cle masquee]'
         $diagnostic = "HTTP $apiStatus"
         if ($apiErrorCode) { $diagnostic += " / $apiErrorCode" }
-        if ($apiErrorMessage) { $diagnostic += " — $apiErrorMessage" }
-        Write-Warning "OpenAI Realtime refusée : $diagnostic"
-        Send-Json $Response @{error="OpenAI Realtime refusée : $diagnostic"} 502
+        if ($apiErrorMessage) { $diagnostic += "  -  $apiErrorMessage" }
+        Write-Warning "OpenAI Realtime refusee : $diagnostic"
+        Send-Json $Response @{error="OpenAI Realtime refusee : $diagnostic"} 502
       }
       continue
     }
     if ($Request.HttpMethod -eq "POST" -and $Path -eq "/api/mcp/tool") {
       $origin = $Request.Headers["Origin"]
-      if ($origin -ne "http://127.0.0.1:$Port") { Send-Json $Response @{error="Origine refusée"} 403; continue }
+      if ($origin -ne "http://127.0.0.1:$Port") { Send-Json $Response @{error="Origine refusee"} 403; continue }
       if (-not $N8nAuthValue) { Send-Json $Response @{error="Configure le credential MCP local dans .env."} 503; continue }
       try {
         $reader = [System.IO.StreamReader]::new($Request.InputStream, $Request.ContentEncoding)
@@ -182,7 +182,7 @@ while ($Listener.IsListening) {
         $result = Invoke-JarvisMcpTool $inputObject
         Send-Json $Response @{ok=$true; result=$result}
       } catch {
-        Send-Json $Response @{ok=$false; error="Appel de l'outil en lecture seule échoué."} 502
+        Send-Json $Response @{ok=$false; error="Appel de l'outil en lecture seule echoue."} 502
       }
       continue
     }
