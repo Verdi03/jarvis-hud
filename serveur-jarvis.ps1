@@ -79,7 +79,7 @@ function Invoke-JarvisMcpTool($InputObject) {
   if ($init.payload.error) { throw "Initialisation MCP refusee." }
   $sid = $init.sessionId
   $null = Invoke-McpRpc "notifications/initialized" $null $sid 0
-  $call = Invoke-McpRpc "tools/call" @{ name = "jarvis_readonly_jarvis_search_gmail"; arguments = @{ query = $query } } $sid 2
+  $call = Invoke-McpRpc "tools/call" @{ name = "jarvis_search_gmail"; arguments = @{ query = $query } } $sid 2
   if ($call.payload.error -or $call.payload.result.isError) { throw "Appel MCP fictif refuse." }
   # Return only a fixed receipt; never pass Gmail content to the Realtime model.
   return @{ status = "completed"; test = "fictitious_read_only_call"; result_content_forwarded = $false }
@@ -166,6 +166,13 @@ while ($Listener.IsListening) {
         $result = Invoke-JarvisMcpTool $inputObject
         Send-Json $Response @{ok=$true; result=$result}
       } catch {
+        $mcpException = $_.Exception
+        $mcpMessage = [string]$mcpException.Message
+        if ($N8nAuthValue) { $mcpMessage = $mcpMessage.Replace([string]$N8nAuthValue, "[secret masquee]") }
+        if ($OpenAiKey) { $mcpMessage = $mcpMessage.Replace([string]$OpenAiKey, "[secret masquee]") }
+        if ($N8nMcpUrl) { $mcpMessage = $mcpMessage.Replace([string]$N8nMcpUrl, "[URL MCP masquee]") }
+        if ($mcpMessage.Length -gt 300) { $mcpMessage = $mcpMessage.Substring(0, 300) }
+        Write-Warning ("MCP echec (" + $mcpException.GetType().Name + "): " + $mcpMessage)
         Send-Json $Response @{ok=$false; error="Appel de l'outil en lecture seule echoue."} 502
       }
       continue
