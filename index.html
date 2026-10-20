@@ -68,9 +68,9 @@ dc=pc.createDataChannel('oai-events');
 dc.onopen=()=>{connection.textContent='REALTIME · CONNECTÉ';start.hidden=true;mute.hidden=false;stop.hidden=false;setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse');draw()};
 const completedToolCalls=new Set();
 async function returnToolCalls(items){
-  const pending=items.filter(i=>i&&i.type==='function_call'&&i.call_id&&(i.name==='jarvis_test_mcp_readonly'||i.name==='jarvis_search_recent_unread_emails')&&!completedToolCalls.has(i.call_id));
+  const pending=items.filter(i=>i&&i.type==='function_call'&&i.call_id&&(['jarvis_test_mcp_readonly','jarvis_search_recent_unread_emails','jarvis_search_gmail','jarvis_read_gmail_message'].includes(i.name))&&!completedToolCalls.has(i.call_id));
   if(!pending.length)return false;
-  setState('thinking','TEST MCP EN COURS','Appel fictif en lecture seule…');
+  setState('thinking','LECTURE GMAIL EN COURS','Lecture en lecture seule…');
   for(const item of pending){
     completedToolCalls.add(item.call_id);
     let output;
