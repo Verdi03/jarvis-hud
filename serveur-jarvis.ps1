@@ -63,12 +63,20 @@ function Invoke-McpRpc([string]$Method, $Params, [string]$SessionId = $null, [in
   $body = $payload | ConvertTo-Json -Depth 20 -Compress
   $response = Invoke-WebRequest -UseBasicParsing -Uri $N8nMcpUrl -Method Post -Headers $headers -ContentType "application/json" -Body $body -TimeoutSec 30
   $content = [string]$response.Content
-  if ($response.Headers["Content-Type"] -like "*text/event-stream*") {
-    $dataLine = ($content -split "`n" | Where-Object { $_ -like "data:*" } | Select-Object -Last 1)
-    if ($dataLine) { $content = $dataLine.Substring(5).Trim() }
-  }
+  $contentType = [string]$response.Headers["Content-Type"]
   $parsed = $null
-  if ($content) { $parsed = $content | ConvertFrom-Json }
+  if ($contentType -like "*text/event-stream*") {
+    $dataLines = @($content -split "`r?`n" | Where-Object { $_.StartsWith("data:") } | ForEach-Object { $_.Substring(5).Trim() } | Where-Object { $_ -and $_ -ne "[DONE]" })
+    for ($i = $dataLines.Count - 1; $i -ge 0; $i--) {
+      try {
+        $candidate = $dataLines[$i] | ConvertFrom-Json
+        if ($candidate -and $candidate.id -eq $Id) { $parsed = $candidate; break }
+      } catch {}
+    }
+    if (-not $parsed -and $Method -ne "notifications/initialized") { throw "Reponse MCP SSE sans resultat JSON correspondant." }
+  } elseif ($content) {
+    $parsed = $content | ConvertFrom-Json
+  }
   return @{ payload = $parsed; sessionId = [string]$response.Headers["Mcp-Session-Id"] }
 }
 function Invoke-JarvisMcpTool($InputObject) {
