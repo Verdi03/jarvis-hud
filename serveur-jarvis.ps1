@@ -106,7 +106,27 @@ while ($Listener.IsListening) {
       $sessionConfig = @{
         type = "realtime"
         model = "gpt-realtime-mini"
-        instructions = "Tu es JARVIS, assistant personnel vocal de Verdi. Reponds en francais oral naturel et brievement. N'utilise aucun outil et ne pretends pas avoir lu un compte ou effectue une action. Demande une validation explicite avant tout envoi, modification, suppression, publication ou depense."
+        instructions = "Tu es JARVIS, assistant vocal de Verdi. Reponds en francais oral naturel et brievement. Tu peux appeler jarvis_test_mcp_readonly uniquement si Verdi demande explicitement le test fictif MCP n8n. Cet outil execute une recherche Gmail avec un sujet fictif fixe, sans transmettre de contenu Gmail a ta reponse. Pour les autres demandes, n'utilise aucun outil et ne pretends jamais avoir lu un compte ou effectue une action. Demande une validation explicite avant tout envoi, modification, suppression, publication ou depense."
+        tools = @(
+          @{
+            type = "function"
+            name = "jarvis_test_mcp_readonly"
+            description = "Lancer uniquement le test fictif et en lecture seule du connecteur MCP n8n, quand Verdi le demande explicitement."
+            parameters = @{
+              type = "object"
+              properties = @{
+                test_code = @{
+                  type = "string"
+                  enum = @("JARVIS-MCP-TEST-20261019")
+                  description = "Code fixe du test fictif autorise."
+                }
+              }
+              required = @("test_code")
+              additionalProperties = $false
+            }
+          }
+        )
+        tool_choice = "auto"
         audio = @{
           input = @{
             transcription = @{model="gpt-4o-mini-transcribe"; language="fr"}
