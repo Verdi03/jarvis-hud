@@ -68,7 +68,7 @@ dc=pc.createDataChannel('oai-events');
 dc.onopen=()=>{connection.textContent='REALTIME · CONNECTÉ';start.hidden=true;mute.hidden=false;stop.hidden=false;setState('listening','JARVIS À L’ÉCOUTE','Parle normalement, tu peux interrompre sa réponse');draw()};
 const completedToolCalls=new Set();
 async function returnToolCalls(items){
-  const pending=items.filter(i=>i&&i.type==='function_call'&&i.call_id&&i.name==='jarvis_test_mcp_readonly'&&!completedToolCalls.has(i.call_id));
+  const pending=items.filter(i=>i&&i.type==='function_call'&&i.call_id&&(i.name==='jarvis_test_mcp_readonly'||i.name==='jarvis_search_recent_unread_emails')&&!completedToolCalls.has(i.call_id));
   if(!pending.length)return false;
   setState('thinking','TEST MCP EN COURS','Appel fictif en lecture seule…');
   for(const item of pending){
@@ -82,7 +82,7 @@ async function returnToolCalls(items){
     }catch{
       output=JSON.stringify({ok:false,error:'Test MCP échoué. Aucun contenu de compte n’a été transmis.'});
     }
-    if(output.length>2000)output=output.slice(0,2000);
+    if(output.length>12000)output=output.slice(0,12000);
     if(dc&&dc.readyState==='open')dc.send(JSON.stringify({type:'conversation.item.create',item:{type:'function_call_output',call_id:item.call_id,output}}));
   }
   if(dc&&dc.readyState==='open')dc.send(JSON.stringify({type:'response.create'}));
