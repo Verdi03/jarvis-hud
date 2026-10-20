@@ -150,18 +150,18 @@ while ($Listener.IsListening) {
               additionalProperties = $false
             }
           }
-        )
-        @{
-          type = "function"
-          name = "jarvis_search_recent_unread_emails"
-          description = "Rechercher les emails non lus des dernieres 24 heures avec une requete fixe, limitee a 10 resultats. A appeler uniquement sur demande explicite de Verdi."
-          parameters = @{
-            type = "object"
-            properties = @{}
-            required = @()
-            additionalProperties = $false
+          @{
+            type = "function"
+            name = "jarvis_search_recent_unread_emails"
+            description = "Rechercher les emails non lus des dernieres 24 heures avec une requete fixe, limitee a 10 resultats. A appeler uniquement sur demande explicite de Verdi."
+            parameters = @{
+              type = "object"
+              properties = @{}
+              required = @()
+              additionalProperties = $false
+            }
           }
-        }
+        )
         tool_choice = "auto"
         audio = @{
           input = @{
