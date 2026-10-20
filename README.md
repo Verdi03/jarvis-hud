@@ -32,6 +32,6 @@ Une fois les trois champs renseignés, relance `lancer-jarvis.cmd`, démarre la 
 
 ## Ce qui n'est pas encore intégré
 
-Cette première étape est la conversation vocale uniquement. Elle ne lit pas encore Gmail, Drive ou Calendar, ne crée pas de tâche, n'appelle pas n8n, ne déclenche pas d'agent Meta et ne se connecte pas à Telegram. Les outils, le brief, la mémoire partagée et les validations sont décrits dans le plan privé fourni séparément ; ils devront être ajoutés avant de présenter Jarvis comme entièrement opérationnel.
+La conversation vocale peut maintenant appeler uniquement le test fictif MCP ci-dessus, lorsque Verdi le demande explicitement. Elle ne lit pas les vrais emails, fichiers Drive ou événements Calendar ; elle ne crée pas de tâche, ne déclenche pas d'agent Meta et ne se connecte pas à Telegram. Les intégrations métier, le brief, la mémoire partagée et les validations devront être ajoutés avant de présenter Jarvis comme entièrement opérationnel.
 
 L'API OpenAI est facturée à l'usage séparément de ChatGPT/Codex. Utilise un budget et des alertes sur OpenAI Platform. Ce code n'a pas été testé physiquement sur Windows avec une clé API réelle.
